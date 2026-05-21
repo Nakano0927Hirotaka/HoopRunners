@@ -1,0 +1,14 @@
+{
+	"Targets": [
+		{
+			"Name": "HoopRunners",
+			"Path": "..\\Source\\HoopRunners.Target.cs",
+			"Type": "Game"
+		},
+		{
+			"Name": "HoopRunnersEditor",
+			"Path": "..\\Source\\HoopRunnersEditor.Target.cs",
+			"Type": "Editor"
+		}
+	]
+}
