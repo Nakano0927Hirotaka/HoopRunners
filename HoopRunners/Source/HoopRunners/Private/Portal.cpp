@@ -24,6 +24,9 @@ APortal::APortal()
 {
     PrimaryActorTick.bCanEverTick = true;
 
+    bReplicates = true;
+    SetReplicateMovement(true);
+
     Root =
         CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
@@ -54,6 +57,10 @@ APortal::APortal()
 void APortal::BeginPlay()
 {
     Super::BeginPlay();
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("Owner = %s"),
+        *GetNameSafe(GetOwner()));
 
     if (PortalBaseMaterial)
     {
@@ -99,8 +106,6 @@ void APortal::BeginPlay()
         this,
         &APortal::OnEndOverlap
     );
-
-    
 }
 
 // ===== Tick =====
@@ -109,11 +114,19 @@ void APortal::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
+    if (!HasAuthority())
+    {
+        return;
+    }
+
     CleanupInvalidActors();
 
-    UpdateCaptureCamera();
-
     ProcessTeleport();
+
+    if (!IsNetMode(NM_DedicatedServer))
+    {
+        UpdateCaptureCamera();
+    }
 }
 
 
@@ -357,10 +370,20 @@ void APortal::TeleportActor(AActor* Actor)
     NewLocation +=
         LinkedPortal->GetActorForwardVector() * 50.f;
 
-    Actor->SetActorLocationAndRotation(
-        NewLocation,
-        NewWorld.GetRotation().Rotator()
-    );
+    if (ACharacter* Char = Cast<ACharacter>(Actor))
+    {
+        Char->TeleportTo(
+            NewLocation,
+            NewWorld.GetRotation().Rotator()
+        );
+    }
+    else
+    {
+        Actor->SetActorLocationAndRotation(
+            NewLocation,
+            NewWorld.GetRotation().Rotator()
+        );
+    }
 
     LinkedPortal->OverlappingActors.Add(Actor);
 
@@ -452,6 +475,15 @@ void APortal::InitializePortal()
 void APortal::SetViewingPlayer(APlayerController* PC)
 {
     ViewingPlayer = PC;
+}
+
+void APortal::GetLifetimeReplicatedProps(
+    TArray<FLifetimeProperty>& OutLifetimeProps
+) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(APortal, LinkedPortal);
 }
 
 // ===== Overlap =====
