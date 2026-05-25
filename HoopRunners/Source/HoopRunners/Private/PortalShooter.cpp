@@ -5,179 +5,210 @@
 
 APortalShooter::APortalShooter()
 {
-	PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bCanEverTick = false;
 
-	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+    bReplicates = true;
+
+    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 }
 
 void APortalShooter::Fire(FVector Start, FVector Forward)
 {
-	UWorld* World = GetWorld();
-	if (!World || !PortalClass) return;
+    UE_LOG(LogTemp, Warning,
+        TEXT("Shooter = %s"),
+        *GetName());
 
-	// ===== 表トレース =====
-	FHitResult Hit;
-	FVector End = Start + (Forward * 10000.f);
+    if (!HasAuthority())
+    {
+        ServerFire(Start, Forward);
+        return;
+    }
 
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(this);
+    UWorld* World = GetWorld();
+    if (!World || !PortalClass) return;
 
-	// 既存ポータルも無視（重要）
-	if (CurrentPortalA) QueryParams.AddIgnoredActor(CurrentPortalA);
-	if (CurrentPortalB) QueryParams.AddIgnoredActor(CurrentPortalB);
+    // ===== 表トレース =====
+    FHitResult Hit;
+    FVector End = Start + (Forward * 10000.f);
 
-	bool bHit = World->LineTraceSingleByChannel(
-		Hit, Start, End, ECC_Visibility, QueryParams);
+    FCollisionQueryParams QueryParams;
+    QueryParams.AddIgnoredActor(this);
 
-	if (!bHit) return;
+    // 既存ポータルも無視（重要）
+    if (CurrentPortalA) QueryParams.AddIgnoredActor(CurrentPortalA);
+    if (CurrentPortalB) QueryParams.AddIgnoredActor(CurrentPortalB);
 
-	// 設置禁止
-	if (Hit.GetActor() && Hit.GetActor()->ActorHasTag(TEXT("NoPortal")))
-	{
-		UKismetSystemLibrary::PrintString(this, TEXT("NO Portal"));
-		return;
-	}
+    bool bHit = World->LineTraceSingleByChannel(
+        Hit, Start, End, ECC_Visibility, QueryParams);
 
-	FVector HitPoint = Hit.ImpactPoint;
-	FVector Normal = Hit.ImpactNormal.GetSafeNormal();
+    if (!bHit) return;
 
-	// ===== 1マスチェック（超重要）=====
-	// 1マス先に壁があるか
-	FVector CheckPos = HitPoint - Normal * CellSize;
+    // 設置禁止
+    if (Hit.GetActor() && Hit.GetActor()->ActorHasTag(TEXT("NoPortal")))
+    {
+        UKismetSystemLibrary::PrintString(this, TEXT("NO Portal"));
+        return;
+    }
 
-	FHitResult CheckHit;
-	bool bHasWall = World->LineTraceSingleByChannel(
-		CheckHit,
-		CheckPos + Normal * 10.f,
-		CheckPos - Normal * 10.f,
-		ECC_Visibility,
-		QueryParams
-	);
+    FVector HitPoint = Hit.ImpactPoint;
+    FVector Normal = Hit.ImpactNormal.GetSafeNormal();
 
-	if (!bHasWall)
-	{
-		UKismetSystemLibrary::PrintString(this, TEXT("No Back Wall"));
-		return;
-	}
+    // ===== 1マスチェック（超重要）=====
+    // 1マス先に壁があるか
+    FVector CheckPos = HitPoint - Normal * CellSize;
 
-	// ===== 2マス防止 =====
-	FVector CheckPos2 = HitPoint - Normal * (CellSize * 2);
+    FHitResult CheckHit;
+    bool bHasWall = World->LineTraceSingleByChannel(
+        CheckHit,
+        CheckPos + Normal * 10.f,
+        CheckPos - Normal * 10.f,
+        ECC_Visibility,
+        QueryParams
+    );
 
-	FHitResult CheckHit2;
-	bool bSecondWall = World->LineTraceSingleByChannel(
-		CheckHit2,
-		CheckPos2 + Normal * 10.f,
-		CheckPos2 - Normal * 10.f,
-		ECC_Visibility,
-		QueryParams
-	);
+    if (!bHasWall)
+    {
+        UKismetSystemLibrary::PrintString(this, TEXT("No Back Wall"));
+        return;
+    }
 
-	if (bSecondWall)
-	{
-		UKismetSystemLibrary::PrintString(this, TEXT("Too Thick (2 blocks)"));
-		return;
-	}
+    // ===== 2マス防止 =====
+    FVector CheckPos2 = HitPoint - Normal * (CellSize * 2);
 
-	// ===== 回転安定 =====
-	FVector Up = FVector::UpVector;
+    FHitResult CheckHit2;
+    bool bSecondWall = World->LineTraceSingleByChannel(
+        CheckHit2,
+        CheckPos2 + Normal * 10.f,
+        CheckPos2 - Normal * 10.f,
+        ECC_Visibility,
+        QueryParams
+    );
 
-	if (FMath::Abs(FVector::DotProduct(Normal, Up)) > 0.99f)
-	{
-		Up = FVector::ForwardVector;
-	}
+    if (bSecondWall)
+    {
+        UKismetSystemLibrary::PrintString(this, TEXT("Too Thick (2 blocks)"));
+        return;
+    }
 
-	// ===== 配置 =====
-	FVector FrontLocation = HitPoint + Normal * PortalOffset;
-	FVector BackLocation = CheckHit.ImpactPoint - Normal * PortalOffset;
+    // ===== 回転安定 =====
+    FVector Up = FVector::UpVector;
 
-	FRotator FrontRot = FRotationMatrix::MakeFromXZ(Normal, Up).Rotator();
-	FRotator BackRot = FRotationMatrix::MakeFromXZ(-CheckHit.ImpactNormal, Up).Rotator();
+    if (FMath::Abs(FVector::DotProduct(Normal, Up)) > 0.99f)
+    {
+        Up = FVector::ForwardVector;
+    }
 
-	// ===== デバッグ =====
-	DrawDebugLine(World, HitPoint, BackLocation, FColor::Green, false, 5.f, 0, 2.f);
-	DrawDebugSphere(World, FrontLocation, 20, 12, FColor::Green, false, 5.f);
-	DrawDebugSphere(World, BackLocation, 20, 12, FColor::Red, false, 5.f);
+    // ===== 配置 =====
+    FVector FrontLocation = HitPoint + Normal * PortalOffset;
+    FVector BackLocation = CheckHit.ImpactPoint - Normal * PortalOffset;
 
-	// ===== 既存削除 =====
-	if (IsValid(CurrentPortalA)) CurrentPortalA->Destroy();
-	if (IsValid(CurrentPortalB)) CurrentPortalB->Destroy();
+    FRotator FrontRot = FRotationMatrix::MakeFromXZ(Normal, Up).Rotator();
+    FRotator BackRot = FRotationMatrix::MakeFromXZ(-CheckHit.ImpactNormal, Up).Rotator();
 
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride =
-		ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    // ===== デバッグ =====
+    DrawDebugLine(World, HitPoint, BackLocation, FColor::Green, false, 5.f, 0, 2.f);
+    DrawDebugSphere(World, FrontLocation, 20, 12, FColor::Green, false, 5.f);
+    DrawDebugSphere(World, BackLocation, 20, 12, FColor::Red, false, 5.f);
 
-	// ===== 生成 =====
-	APortal* A = World->SpawnActor<APortal>(
-		PortalClass, FrontLocation, FrontRot, SpawnParams);
+    // ===== 既存削除 =====
+    if (IsValid(CurrentPortalA)) CurrentPortalA->Destroy();
+    if (IsValid(CurrentPortalB)) CurrentPortalB->Destroy();
 
-	APortal* B = World->SpawnActor<APortal>(
-		PortalClass, BackLocation, BackRot, SpawnParams);
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.SpawnCollisionHandlingOverride =
+        ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	APlayerController* PC =
-		GetWorld()->GetFirstPlayerController();
+    // ===== 生成 =====
+    APortal* A = World->SpawnActor<APortal>(
+        PortalClass, FrontLocation, FrontRot, SpawnParams);
 
-	if (A && B)
-	{
-		A->RenderTarget = RT_PortalA;
-		B->RenderTarget = RT_PortalB;
+    APortal* B = World->SpawnActor<APortal>(
+        PortalClass, BackLocation, BackRot, SpawnParams);
 
-		A->bMainPortal = true;
-		B->bMainPortal = false;
+    APawn* OwnerPawn = Cast<APawn>(GetOwner());
 
-		A->LinkedPortal = B;
-		B->LinkedPortal = A;
+    APlayerController* PC =
+        OwnerPawn
+        ? Cast<APlayerController>(OwnerPawn->GetController())
+        : nullptr;
 
-		A->InitializePortal();
-		B->InitializePortal();
+    if (A && B)
+    {
+        A->RenderTarget = RT_PortalA;
+        B->RenderTarget = RT_PortalB;
 
-		CurrentPortalA = A;
-		CurrentPortalB = B;
+        A->bMainPortal = true;
+        B->bMainPortal = false;
 
-		A->SetViewingPlayer(PC);
-		B->SetViewingPlayer(PC);
-	}
+        A->LinkedPortal = B;
+        B->LinkedPortal = A;
+
+        A->InitializePortal();
+        B->InitializePortal();
+
+        CurrentPortalA = A;
+        CurrentPortalB = B;
+
+        if (PC && PC->IsLocalController())
+        {
+            A->SetViewingPlayer(PC);
+            B->SetViewingPlayer(PC);
+        }
+    }
 }
 
-void APortalShooter::UpdatePreview(FVector Start, FVector Forward) 
-{ 
-	UWorld* World = GetWorld(); 
-	if (!World) return; 
-	FVector End = Start + Forward * 10000.f; 
-	FHitResult Hit; 
-	FCollisionQueryParams QueryParams; 
-	APlayerController* PC = World->GetFirstPlayerController(); 
-	APawn* PlayerPawn = PC ? PC->GetPawn() : nullptr; 
-	QueryParams.AddIgnoredActor(this); 
-	if (PlayerPawn) { QueryParams.AddIgnoredActor(PlayerPawn); } 
-	bool bHit = World->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, QueryParams); 
-	if (!bHit) 
-	{
-		if (CurrentPreviewActor) { 
-			CurrentPreviewActor->Destroy(); 
-			CurrentPreviewActor = nullptr; 
-		} 
-		return; 
-	} 
-	FVector HitPoint = Hit.ImpactPoint; FVector Normal = Hit.ImpactNormal.GetSafeNormal(); 
-	bool bCanPlace = true; 
-	if (Hit.GetActor() && Hit.GetActor()->ActorHasTag(TEXT("NoPortal"))) 
-	{ bCanPlace = false; } 
-	if (!CurrentPreviewActor || bLastCanPlace != bCanPlace) 
-	{ 
-		if (CurrentPreviewActor) 
-		{ CurrentPreviewActor->Destroy(); CurrentPreviewActor = nullptr; } 
-		TSubclassOf<AActor> SpawnClass = bCanPlace ? ValidPreviewActor : InvalidPreviewActor; 
-		if (SpawnClass) 
-		{ 
-			FActorSpawnParameters SpawnParams; 
-			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn; 
-			CurrentPreviewActor = World->SpawnActor<AActor>(SpawnClass, HitPoint + Normal * 2.f, FRotationMatrix::MakeFromX(Normal).Rotator(), SpawnParams); 
-		} 
-		bLastCanPlace = bCanPlace; 
-	} 
-	if (CurrentPreviewActor) 
-	{ 
-		CurrentPreviewActor->SetActorLocation(HitPoint + Normal * 2.f); 
-		CurrentPreviewActor->SetActorRotation(FRotationMatrix::MakeFromX(Normal).Rotator()); 
-	} 
+void APortalShooter::ServerFire_Implementation(
+    FVector Start,
+    FVector Forward)
+{
+    Fire(Start, Forward);
+    UE_LOG(LogTemp, Warning, TEXT("ServerFire"));
+}
+
+void APortalShooter::UpdatePreview(FVector Start, FVector Forward)
+{
+    UWorld* World = GetWorld();
+    if (!World) return;
+    FVector End = Start + Forward * 10000.f;
+    FHitResult Hit;
+    FCollisionQueryParams QueryParams;
+    APlayerController* PC = World->GetFirstPlayerController();
+    APawn* PlayerPawn = PC ? PC->GetPawn() : nullptr;
+    QueryParams.AddIgnoredActor(this);
+    if (PlayerPawn) { QueryParams.AddIgnoredActor(PlayerPawn); }
+    bool bHit = World->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, QueryParams);
+    if (!bHit)
+    {
+        if (CurrentPreviewActor) {
+            CurrentPreviewActor->Destroy();
+            CurrentPreviewActor = nullptr;
+        }
+        return;
+    }
+    FVector HitPoint = Hit.ImpactPoint; FVector Normal = Hit.ImpactNormal.GetSafeNormal();
+    bool bCanPlace = true;
+    if (Hit.GetActor() && Hit.GetActor()->ActorHasTag(TEXT("NoPortal")))
+    {
+        bCanPlace = false;
+    }
+    if (!CurrentPreviewActor || bLastCanPlace != bCanPlace)
+    {
+        if (CurrentPreviewActor)
+        {
+            CurrentPreviewActor->Destroy(); CurrentPreviewActor = nullptr;
+        }
+        TSubclassOf<AActor> SpawnClass = bCanPlace ? ValidPreviewActor : InvalidPreviewActor;
+        if (SpawnClass)
+        {
+            FActorSpawnParameters SpawnParams;
+            SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+            CurrentPreviewActor = World->SpawnActor<AActor>(SpawnClass, HitPoint + Normal * 2.f, FRotationMatrix::MakeFromX(Normal).Rotator(), SpawnParams);
+        }
+        bLastCanPlace = bCanPlace;
+    }
+    if (CurrentPreviewActor)
+    {
+        CurrentPreviewActor->SetActorLocation(HitPoint + Normal * 2.f);
+        CurrentPreviewActor->SetActorRotation(FRotationMatrix::MakeFromX(Normal).Rotator());
+    }
 }

@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Net/UnrealNetwork.h"
 #include "Portal.generated.h"
 
 class UBoxComponent;
@@ -25,9 +26,6 @@ public:
     UTextureRenderTarget2D* RenderTarget;
 
     UPROPERTY(EditAnywhere, Category = "Portal")
-    APortal* LinkedPortal;
-
-    UPROPERTY(EditAnywhere, Category = "Portal")
     bool bMainPortal = false;
 
     APortal();
@@ -37,6 +35,9 @@ public:
     void InitializePortal();
 
     void SetViewingPlayer(APlayerController* PC);
+
+    UPROPERTY(Replicated)
+    APortal* LinkedPortal;
 
 protected:
     virtual void BeginPlay() override;
