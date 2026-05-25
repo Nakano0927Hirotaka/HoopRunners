@@ -14,6 +14,10 @@ APortalShooter::APortalShooter()
 
 void APortalShooter::Fire(FVector Start, FVector Forward)
 {
+    UE_LOG(LogTemp, Warning,
+        TEXT("Shooter = %s"),
+        *GetName());
+
     if (!HasAuthority())
     {
         ServerFire(Start, Forward);
