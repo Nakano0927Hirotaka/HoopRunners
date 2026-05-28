@@ -185,6 +185,7 @@ void APortalShooter::UpdatePreview(FVector Start, FVector Forward)
         }
         return;
     }
+
     FVector HitPoint = Hit.ImpactPoint; FVector Normal = Hit.ImpactNormal.GetSafeNormal();
     bool bCanPlace = true;
     if (Hit.GetActor() && Hit.GetActor()->ActorHasTag(TEXT("NoPortal")))
@@ -201,8 +202,14 @@ void APortalShooter::UpdatePreview(FVector Start, FVector Forward)
         if (SpawnClass)
         {
             FActorSpawnParameters SpawnParams;
-            SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-            CurrentPreviewActor = World->SpawnActor<AActor>(SpawnClass, HitPoint + Normal * 2.f, FRotationMatrix::MakeFromX(Normal).Rotator(), SpawnParams);
+
+            SpawnParams.Owner = GetOwner();
+
+            SpawnParams.Instigator =
+                Cast<APawn>(GetOwner());
+
+            SpawnParams.SpawnCollisionHandlingOverride =
+                ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
         }
         bLastCanPlace = bCanPlace;
     }
