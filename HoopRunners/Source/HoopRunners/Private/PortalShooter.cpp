@@ -12,34 +12,105 @@ APortalShooter::APortalShooter()
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 }
 
-void APortalShooter::Fire(FVector Start, FVector Forward)
+void APortalShooter::Fire(FVector start, FVector forward)
+{
+    if (!HasAuthority())
+    {
+        ServerFire(start, forward);
+        return;
+    }
+
+    FireInternal(start, forward);
+}
+
+void APortalShooter::ServerFire_Implementation(
+    FVector start,FVector forward)
+{
+    APawn* OwnerPawn = Cast<APawn>(GetOwner());
+
+    if (!OwnerPawn)
+    {
+        return;
+    }
+
+    FVector NewStart;
+    FVector NewForward;
+
+    APlayerController* PC =
+        Cast<APlayerController>(OwnerPawn->GetController());
+
+    if (PC && PC->PlayerCameraManager)
+    {
+        NewStart =
+            PC->PlayerCameraManager->GetCameraLocation();
+
+        NewForward =
+            PC->PlayerCameraManager
+            ->GetCameraRotation()
+            .Vector();
+    }
+    else
+    {
+        NewStart = start;
+        NewForward = forward;
+    }
+
+    FireInternal(NewStart, NewForward);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("ServerFire Start=%s Forward=%s"),
+        *NewStart.ToString(),
+        *NewForward.ToString());
+}
+
+void APortalShooter::FireInternal(FVector start, FVector forward) 
 {
     UE_LOG(LogTemp, Warning,
         TEXT("Shooter = %s"),
         *GetName());
 
-    if (!HasAuthority())
-    {
-        ServerFire(Start, Forward);
-        return;
-    }
+
+    APawn* OwnerPawn = Cast<APawn>(GetOwner());
+
+    APlayerController* PC =
+        OwnerPawn
+        ? Cast<APlayerController>(OwnerPawn->GetController())
+        : nullptr;
+
 
     UWorld* World = GetWorld();
     if (!World || !PortalClass) return;
 
     // ===== 表トレース =====
     FHitResult Hit;
-    FVector End = Start + (Forward * 10000.f);
+    FVector End = start + (forward * 10000.f);
 
     FCollisionQueryParams QueryParams;
+
     QueryParams.AddIgnoredActor(this);
+
+    if (OwnerPawn)
+    {
+        QueryParams.AddIgnoredActor(OwnerPawn);
+    }
 
     // 既存ポータルも無視（重要）
     if (CurrentPortalA) QueryParams.AddIgnoredActor(CurrentPortalA);
     if (CurrentPortalB) QueryParams.AddIgnoredActor(CurrentPortalB);
 
+    DrawDebugLine(
+        World,
+        start,
+        End,
+        FColor::Red,
+        false,
+        5.f,
+        0,
+        2.f
+    );
+
     bool bHit = World->LineTraceSingleByChannel(
-        Hit, Start, End, ECC_Visibility, QueryParams);
+        Hit, start, End, ECC_Visibility, QueryParams);
 
     if (!bHit) return;
 
@@ -111,12 +182,26 @@ void APortalShooter::Fire(FVector Start, FVector Forward)
     DrawDebugSphere(World, BackLocation, 20, 12, FColor::Red, false, 5.f);
 
     // ===== 既存削除 =====
-    if (IsValid(CurrentPortalA)) CurrentPortalA->Destroy();
-    if (IsValid(CurrentPortalB)) CurrentPortalB->Destroy();
+    if (IsValid(CurrentPortalA) &&
+        CurrentPortalA->OwnerPlayer == PC)
+    {
+        CurrentPortalA->Destroy();
+    }
+
+    if (IsValid(CurrentPortalB) &&
+        CurrentPortalB->OwnerPlayer == PC)
+    {
+        CurrentPortalB->Destroy();
+    }
 
     FActorSpawnParameters SpawnParams;
     SpawnParams.SpawnCollisionHandlingOverride =
         ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+    SpawnParams.Owner = GetOwner();
+
+    SpawnParams.Instigator =
+        Cast<APawn>(GetOwner());
 
     // ===== 生成 =====
     APortal* A = World->SpawnActor<APortal>(
@@ -125,15 +210,12 @@ void APortalShooter::Fire(FVector Start, FVector Forward)
     APortal* B = World->SpawnActor<APortal>(
         PortalClass, BackLocation, BackRot, SpawnParams);
 
-    APawn* OwnerPawn = Cast<APawn>(GetOwner());
-
-    APlayerController* PC =
-        OwnerPawn
-        ? Cast<APlayerController>(OwnerPawn->GetController())
-        : nullptr;
 
     if (A && B)
     {
+        A->OwnerPlayer = PC;
+        B->OwnerPlayer = PC;
+
         A->RenderTarget = RT_PortalA;
         B->RenderTarget = RT_PortalB;
 
@@ -149,20 +231,12 @@ void APortalShooter::Fire(FVector Start, FVector Forward)
         CurrentPortalA = A;
         CurrentPortalB = B;
 
-        if (PC && PC->IsLocalController())
+        if (PC)
         {
             A->SetViewingPlayer(PC);
             B->SetViewingPlayer(PC);
         }
     }
-}
-
-void APortalShooter::ServerFire_Implementation(
-    FVector Start,
-    FVector Forward)
-{
-    Fire(Start, Forward);
-    UE_LOG(LogTemp, Warning, TEXT("ServerFire"));
 }
 
 void APortalShooter::UpdatePreview(FVector Start, FVector Forward)
@@ -213,6 +287,7 @@ void APortalShooter::UpdatePreview(FVector Start, FVector Forward)
         }
         bLastCanPlace = bCanPlace;
     }
+
     if (CurrentPreviewActor)
     {
         CurrentPreviewActor->SetActorLocation(HitPoint + Normal * 2.f);

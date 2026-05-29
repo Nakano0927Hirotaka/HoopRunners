@@ -50,6 +50,9 @@ public:
     UPROPERTY(EditAnywhere, Category = "Portal")
     bool bMainPortal = false;
 
+    UPROPERTY(Replicated)
+    APlayerController* OwnerPlayer;
+
     // コンストラクタ
     APortal();
 

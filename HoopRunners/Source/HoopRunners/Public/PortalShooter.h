@@ -24,6 +24,8 @@ public:
     UFUNCTION(BlueprintCallable, Category = "UpdatePreview")
     void UpdatePreview(FVector Start, FVector Forward);
 
+    void FireInternal(FVector Start, FVector Forward);
+
     UPROPERTY(EditAnywhere)
     TSubclassOf<APortal> PortalClass;
 

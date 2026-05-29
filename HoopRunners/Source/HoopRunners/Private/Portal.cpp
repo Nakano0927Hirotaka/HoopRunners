@@ -91,6 +91,11 @@ void APortal::BeginPlay()
         TEXT("ShooterOwner=%s"),
         *GetNameSafe(GetOwner()));
 
+    if (GetNetMode() == NM_DedicatedServer)
+    {
+        return;
+    }
+
     // マテリアルインスタンス生成
     if (PortalBaseMaterial)
     {
@@ -124,6 +129,7 @@ void APortal::BeginPlay()
     Capture->ShowFlags.Fog = false;
     Capture->ShowFlags.MotionBlur = false;
 
+    Capture->SetIsReplicated(false);
 
     // TriggerはOverlap専用
     Trigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
