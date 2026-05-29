@@ -1,11 +1,13 @@
+// PortalShooter.h
+
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/DecalComponent.h"
 #include "PortalShooter.generated.h"
 
 class APortal;
+class UTextureRenderTarget2D;
 
 UCLASS()
 class HOOPRUNNERS_API APortalShooter : public AActor
@@ -15,39 +17,48 @@ class HOOPRUNNERS_API APortalShooter : public AActor
 public:
     APortalShooter();
 
-    UFUNCTION(BlueprintCallable, Category = "Fire")
+    UFUNCTION(BlueprintCallable, Category = "Portal")
     void Fire(FVector Start, FVector Forward);
 
     UFUNCTION(Server, Reliable)
     void ServerFire(FVector Start, FVector Forward);
 
-    UFUNCTION(BlueprintCallable, Category = "UpdatePreview")
-    void UpdatePreview(FVector Start, FVector Forward);
+    void ServerFire_Implementation(
+        FVector Start,
+        FVector Forward);
 
-    void FireInternal(FVector Start, FVector Forward);
+    void FireInternal(
+        FVector Start,
+        FVector Forward);
 
-    UPROPERTY(EditAnywhere)
+    UFUNCTION(BlueprintCallable, Category = "Portal")
+    void UpdatePreview(
+        FVector Start,
+        FVector Forward);
+
+public:
+
+    UPROPERTY(EditAnywhere, Category = "Portal")
     TSubclassOf<APortal> PortalClass;
 
+    UPROPERTY(EditAnywhere, Category = "Portal")
+    float CellSize = 100.f;
 
-    // プレビュー用Actor
+    UPROPERTY(EditAnywhere, Category = "Portal")
+    float PortalOffset = 10.f;
+
+    UPROPERTY(EditAnywhere, Category = "Portal")
+    UTextureRenderTarget2D* RT_PortalA;
+
+    UPROPERTY(EditAnywhere, Category = "Portal")
+    UTextureRenderTarget2D* RT_PortalB;
+
+    // Preview
     UPROPERTY(EditAnywhere)
     TSubclassOf<AActor> ValidPreviewActor;
 
     UPROPERTY(EditAnywhere)
     TSubclassOf<AActor> InvalidPreviewActor;
-
-    UPROPERTY(EditAnywhere, Category = "CellSize")
-    float CellSize = 100.f; // ← 1マスの厚さ
-
-    UPROPERTY(EditAnywhere, Category = "Portal")
-    float PortalOffset = 10.f;
-
-    UPROPERTY(EditAnywhere)
-    UTextureRenderTarget2D* RT_PortalA;
-
-    UPROPERTY(EditAnywhere)
-    UTextureRenderTarget2D* RT_PortalB;
 
 private:
 
@@ -57,10 +68,8 @@ private:
     UPROPERTY()
     APortal* CurrentPortalB;
 
-    // プレビュー管理
     UPROPERTY()
     AActor* CurrentPreviewActor;
 
     bool bLastCanPlace = false;
 };
-
