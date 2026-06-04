@@ -27,6 +27,7 @@ APortal::APortal()
 {
     // Tick関数を毎フレーム呼ぶ
     PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.bStartWithTickEnabled = true;
 
     // ネットワーク同期を有効化
     bReplicates = true;
@@ -123,13 +124,21 @@ void APortal::BeginPlay()
     Capture->HideComponent(PortalMesh);
 
     // このActor全体を非表示
-    Capture->HideActorComponents(this);
 
     Capture->ShowFlags.Atmosphere = false;
     Capture->ShowFlags.Fog = false;
     Capture->ShowFlags.MotionBlur = false;
 
     Capture->SetIsReplicated(false);
+
+    UE_LOG(LogTemp, Error,
+        TEXT("%s ViewingPlayer=%s"),
+        *GetName(),
+        *GetNameSafe(ViewingPlayer));
+
+    UE_LOG(LogTemp, Error,
+        TEXT("%s CaptureScene"),
+        *GetName());
 
     // TriggerはOverlap専用
     Trigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -157,6 +166,19 @@ void APortal::BeginPlay()
         &APortal::OnEndOverlap
     );
 
+    if (PortalMID &&
+        LinkedPortal &&
+        LinkedPortal->RenderTarget)
+    {
+        PortalMID->SetTextureParameterValue(
+            TEXT("PortalTexture"),
+            LinkedPortal->RenderTarget);
+    }
+
+    APlayerController* PC =
+        GetWorld()->GetFirstPlayerController();
+
+    SetViewingPlayer(PC);
 }
 
 // ===== Tick =====
@@ -180,9 +202,18 @@ void APortal::Tick(float DeltaTime)
         ProcessTeleport();
     }
 
+    UE_LOG(LogTemp, Error,
+        TEXT("%s Tick NetMode=%d Role=%d"),
+        *GetName(),
+        (int32)GetNetMode(),
+        (int32)GetLocalRole());
+
     // DedicatedServer以外で描画更新
     if (!IsNetMode(NM_DedicatedServer))
     {
+        UE_LOG(LogTemp, Error,
+            TEXT("%s UpdateCaptureCamera"),
+            *GetName());
         UpdateCaptureCamera();
     }
 }
@@ -227,11 +258,16 @@ void APortal::UpdateCaptureCamera()
     {
         return;
     }
+
     float Dist =
         FVector::Dist(
             Pawn->GetActorLocation(),
             GetActorLocation()
         );
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("RT=%s"),
+        *GetNameSafe(Capture->TextureTarget));
 
     if (Dist > 2500.f)
     {
@@ -253,41 +289,61 @@ void APortal::UpdateCaptureCamera()
     FRotator CamRotation =
         LinkedPortal->GetActorRotation();
 
+    UE_LOG(LogTemp, Error,
+        TEXT("%s LinkedPortalRot=%s"),
+        *GetName(),
+        *LinkedPortal->GetActorRotation().ToString());
+
     // カメラ位置設定
-    if (!CamLocation.Equals(
-        Capture->GetComponentLocation(), 1.f))
+    if(!CamLocation.Equals(Capture->GetComponentLocation(), 1.f))
     {
         Capture->SetWorldLocation(CamLocation);
     }
 
-    // カメラ回転設定
-    if (!CamRotation.Equals(
-        Capture->GetComponentRotation(), 1.f))
-    {
-        Capture->SetWorldRotation(CamRotation);
-    }
 
     // シーン描画
+    DrawDebugSphere(
+        GetWorld(),
+        Capture->GetComponentLocation(),
+        30.f,
+        12,
+        FColor::Red,
+        false,
+        0.05f
+    );
+
+    DrawDebugLine(
+        GetWorld(),
+        Capture->GetComponentLocation(),
+        Capture->GetComponentLocation() +
+        Capture->GetForwardVector() * 300.f,
+        FColor::Green,
+        false,
+        0.05f,
+        0,
+        3.f
+    );
     Capture->CaptureScene();
 }
 
 // カメラ更新可能か確認
 bool APortal::CanUpdateCamera() const
 {
+    UE_LOG(LogTemp, Error,
+        TEXT("%s ViewingPlayer=%s Local=%d"),
+        *GetName(),
+        *GetNameSafe(ViewingPlayer),
+        ViewingPlayer ? ViewingPlayer->IsLocalController() : 0);
+
     // リンク先やCapture未設定なら不可
     if (!LinkedPortal || !Capture)
     {
         return false;
     }
 
+
     // プレイヤー未設定
     if (!ViewingPlayer)
-    {
-        return false;
-    }
-
-    // ローカルプレイヤーのみ
-    if (!ViewingPlayer->IsLocalController())
     {
         return false;
     }
@@ -601,6 +657,11 @@ void APortal::ResetTeleport(AActor* Actor)
 // ポータル初期化
 void APortal::InitializePortal()
 {
+    UE_LOG(LogTemp, Error,
+        TEXT("%s LinkedPortal=%s"),
+        *GetName(),
+        *GetNameSafe(LinkedPortal));
+
     if (!LinkedPortal || !Capture) return;
 
     // RenderTarget設定
@@ -618,6 +679,12 @@ void APortal::InitializePortal()
         );
     }
 
+    UE_LOG(LogTemp, Warning,
+        TEXT("%s Display=%s Capture=%s"),
+        *GetName(),
+        *GetNameSafe(LinkedPortal->RenderTarget),
+        *GetNameSafe(RenderTarget));
+
     // Capture位置
     FVector Pos =
         LinkedPortal->GetActorLocation()
@@ -627,6 +694,11 @@ void APortal::InitializePortal()
     FRotator Rot =
         LinkedPortal->GetActorRotation();
 
+    UE_LOG(LogTemp, Error,
+        TEXT("%s LinkedPortalRot=%s"),
+        *GetName(),
+        *LinkedPortal->GetActorRotation().ToString());
+
     Capture->SetWorldLocation(Pos);
 
     Capture->SetWorldRotation(Rot);
@@ -635,11 +707,10 @@ void APortal::InitializePortal()
 
     // デバッグログ
     UE_LOG(LogTemp, Warning,
-        TEXT("Portal=%s RT=%s Linked=%s"),
+        TEXT("%s Display=%s Capture=%s"),
         *GetName(),
-        *GetNameSafe(RenderTarget),
-        *GetNameSafe(LinkedPortal)
-    );
+        *GetNameSafe(LinkedPortal->RenderTarget),
+        *GetNameSafe(RenderTarget));
 }
 
 // 観測プレイヤー設定

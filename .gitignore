@@ -108,3 +108,5 @@ HoopRunners/Binaries/Win64/UnrealEditor-HoopRunners-7794.dll
 HoopRunners/Binaries/Win64/UnrealEditor-HoopRunners-7794.pdb
 HoopRunners/Binaries/Win64/UnrealEditor-HoopRunners-9255.dll
 HoopRunners/Binaries/Win64/UnrealEditor-HoopRunners-9255.pdb
+*.dll
+*.pdb

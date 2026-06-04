@@ -12,6 +12,8 @@
 
 #include "Kismet/KismetSystemLibrary.h"
 
+#include "Engine/TextureRenderTarget2D.h"
+
 APortalShooter::APortalShooter()
 {
     PrimaryActorTick.bCanEverTick = false;
@@ -288,8 +290,8 @@ void APortalShooter::FireInternal(
     A->OwnerPlayer = PC;
     B->OwnerPlayer = PC;
 
-    A->RenderTarget = RT_PortalA;
-    B->RenderTarget = RT_PortalB;
+    A->RenderTarget = CreatePortalRT();
+    B->RenderTarget = CreatePortalRT();
 
     A->bMainPortal = true;
     B->bMainPortal = false;
@@ -376,4 +378,16 @@ void APortalShooter::UpdatePreview(
             FRotationMatrix::MakeFromX(
                 Normal).Rotator());
     }
+}
+
+UTextureRenderTarget2D* APortalShooter::CreatePortalRT()
+{
+    UTextureRenderTarget2D* RT =
+        NewObject<UTextureRenderTarget2D>(this);
+
+    RT->InitAutoFormat(1024, 1024);
+    RT->ClearColor = FLinearColor::Red;
+    RT->UpdateResourceImmediate(true);
+
+    return RT;
 }

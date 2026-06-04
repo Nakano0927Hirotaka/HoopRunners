@@ -72,4 +72,6 @@ private:
     AActor* CurrentPreviewActor;
 
     bool bLastCanPlace = false;
+
+    UTextureRenderTarget2D* CreatePortalRT();
 };
