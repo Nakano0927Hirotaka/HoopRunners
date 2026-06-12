@@ -13,68 +13,55 @@
 #include "TimerManager.h"
 #include "EngineUtils.h"
 
-// ===== 定数 =====
-
-// ポータル平面を少し前にずらす距離
 static constexpr float PortalPlaneOffset = 10.f;
-
-// テレポート直後の再テレポート防止時間
 static constexpr float TeleportCooldown = 0.05f;
 
 // ===== Constructor =====
 
 APortal::APortal()
 {
-    // Tick関数を毎フレーム呼ぶ
     PrimaryActorTick.bCanEverTick = true;
     PrimaryActorTick.bStartWithTickEnabled = true;
+    PrimaryActorTick.TickInterval = 0.03f;
 
-    // ネットワーク同期を有効化
     bReplicates = true;
-
-    // Actorの移動情報も同期
     SetReplicateMovement(true);
 
-    // ルートコンポーネント生成
-    Root =
-        CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-
+    Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
     RootComponent = Root;
 
-    // ポータル描画用カメラ生成
-    Capture =
-        CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("Capture"));
-
+    Capture = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("Capture"));
     Capture->SetupAttachment(Root);
+    Capture->bCaptureEveryFrame = false;
+    Capture->bCaptureOnMovement = false;
 
-    if (Capture)
-    {
-        // 毎フレーム自動描画しない
-        Capture->bCaptureEveryFrame = false;
-
-        // 移動時の自動描画もしない
-        Capture->bCaptureOnMovement = false;
-
-        // RenderTargetを設定
-        Capture->TextureTarget = RenderTarget;
-    }
-
-    // 当たり判定用Box生成
-    Trigger =
-        CreateDefaultSubobject<UBoxComponent>(TEXT("Trigger"));
-
+    Trigger = CreateDefaultSubobject<UBoxComponent>(TEXT("Trigger"));
     Trigger->SetupAttachment(Root);
-
-    // ポータル範囲設定
     Trigger->SetBoxExtent(FVector(30.f, 100.f, 100.f));
 
-    // ポータル見た目用メッシュ
-    PortalMesh =
-        CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PortalMesh"));
-
+    PortalMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PortalMesh"));
     PortalMesh->SetupAttachment(Root);
+}
 
-    PrimaryActorTick.TickInterval = 0.03f;
+// ===== ヘルパー =====
+
+void APortal::SetupTrigger()
+{
+    Trigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    Trigger->SetCollisionObjectType(ECC_WorldDynamic);
+    Trigger->SetCollisionResponseToAllChannels(ECR_Ignore);
+    Trigger->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+    Trigger->OnComponentBeginOverlap.AddDynamic(this, &APortal::OnOverlap);
+    Trigger->OnComponentEndOverlap.AddDynamic(this, &APortal::OnEndOverlap);
+}
+
+UTextureRenderTarget2D* APortal::CreateRT()
+{
+    UTextureRenderTarget2D* RT =
+        NewObject<UTextureRenderTarget2D>(this, NAME_None, RF_Transient);
+    RT->InitAutoFormat(700, 700);
+    RT->UpdateResourceImmediate(true);
+    return RT;
 }
 
 // ===== BeginPlay =====
@@ -83,113 +70,55 @@ void APortal::BeginPlay()
 {
     Super::BeginPlay();
 
-    // 所有者確認ログ
-    UE_LOG(LogTemp, Warning,
-        TEXT("Owner = %s"),
-        *GetNameSafe(GetOwner()));
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("ShooterOwner=%s"),
-        *GetNameSafe(GetOwner()));
+    SetupTrigger();
 
     if (GetNetMode() == NM_DedicatedServer)
     {
         return;
     }
 
-    // マテリアルインスタンス生成
     if (PortalBaseMaterial)
     {
-        PortalMID =
-            UMaterialInstanceDynamic::Create(
-                PortalBaseMaterial,
-                this
-            );
-
-        // ポータルメッシュへ適用
+        PortalMID = UMaterialInstanceDynamic::Create(
+            PortalBaseMaterial, this);
         PortalMesh->SetMaterial(0, PortalMID);
     }
 
-    // RenderTarget設定
-    if (Capture && RenderTarget)
-    {
-        Capture->TextureTarget = RenderTarget;
-    }
-
-    // シーン全体を描画するモード
     Capture->PrimitiveRenderMode =
         ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
-
-    // 自分自身のメッシュは映さない
     Capture->HideComponent(PortalMesh);
-
-    // このActor全体を非表示
-
     Capture->ShowFlags.Atmosphere = false;
     Capture->ShowFlags.Fog = false;
     Capture->ShowFlags.MotionBlur = false;
+    Capture->bCaptureEveryFrame = false;
+    Capture->bCaptureOnMovement = false;
 
-    Capture->SetIsReplicated(false);
+    // ===== 明るさ設定 =====
+    // 自動露出を無効化して固定値にする
+    Capture->PostProcessSettings.bOverride_AutoExposureMethod = true;
+    Capture->PostProcessSettings.AutoExposureMethod =
+        EAutoExposureMethod::AEM_Manual;
 
-    UE_LOG(LogTemp, Error,
-        TEXT("%s ViewingPlayer=%s"),
-        *GetName(),
-        *GetNameSafe(ViewingPlayer));
+    // 露出補正（値を上げると明るくなる）
+    Capture->PostProcessSettings.bOverride_AutoExposureBias = true;
+    Capture->PostProcessSettings.AutoExposureBias = 2.0f;
 
-    UE_LOG(LogTemp, Error,
-        TEXT("%s CaptureScene"),
-        *GetName());
+    // 固定露出値（明るさの基準、上げると明るくなる）
+    Capture->PostProcessSettings.bOverride_CameraISO = true;
+    Capture->PostProcessSettings.CameraISO = 800.f;
 
-    // TriggerはOverlap専用
-    Trigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-
-    Trigger->SetCollisionObjectType(ECC_WorldDynamic);
-
-    // 全て無視
-    Trigger->SetCollisionResponseToAllChannels(ECR_Ignore);
-
-    // PawnのみOverlap
-    Trigger->SetCollisionResponseToChannel(
-        ECC_Pawn,
-        ECR_Overlap
-    );
-
-    // Overlap開始イベント登録
-    Trigger->OnComponentBeginOverlap.AddDynamic(
-        this,
-        &APortal::OnOverlap
-    );
-
-    // Overlap終了イベント登録
-    Trigger->OnComponentEndOverlap.AddDynamic(
-        this,
-        &APortal::OnEndOverlap
-    );
-
-    if (PortalMID &&
-        LinkedPortal &&
-        LinkedPortal->RenderTarget)
-    {
-        PortalMID->SetTextureParameterValue(
-            TEXT("PortalTexture"),
-            LinkedPortal->RenderTarget);
-    }
-
-    APlayerController* PC =
-        GetWorld()->GetFirstPlayerController();
-
-    SetViewingPlayer(PC);
+    Capture->PostProcessSettings.bOverride_CameraShutterSpeed = true;
+    Capture->PostProcessSettings.CameraShutterSpeed = 60.f;
 }
 
 // ===== Tick =====
+
 void APortal::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // サーバーのみ実行
     if (HasAuthority())
     {
-        // 無効Actor削除
         CleanupTimer += DeltaTime;
 
         if (CleanupTimer >= 2.f)
@@ -198,27 +127,17 @@ void APortal::Tick(float DeltaTime)
             CleanupTimer = 0.f;
         }
 
-        // テレポート処理
         ProcessTeleport();
     }
 
-    UE_LOG(LogTemp, Error,
-        TEXT("%s Tick NetMode=%d Role=%d"),
-        *GetName(),
-        (int32)GetNetMode(),
-        (int32)GetLocalRole());
-
-    // DedicatedServer以外で描画更新
     if (!IsNetMode(NM_DedicatedServer))
     {
-        UE_LOG(LogTemp, Error,
-            TEXT("%s UpdateCaptureCamera"),
-            *GetName());
         UpdateCaptureCamera();
     }
 }
 
-// 無効になったActor情報を削除
+// ===== CleanupInvalidActors =====
+
 void APortal::CleanupInvalidActors()
 {
     TArray<AActor*> RemoveList;
@@ -238,112 +157,76 @@ void APortal::CleanupInvalidActors()
     }
 }
 
-// ポータルカメラ更新
+// ===== UpdateCaptureCamera =====
 void APortal::UpdateCaptureCamera()
 {
-    // 更新可能か確認
-    if (!CanUpdateCamera())
-    {
-        return;
-    }
+    if (!CanUpdateCamera()) return;
 
-    if (!PortalMesh->WasRecentlyRendered(0.1f))
-    {
-        return;
-    }
+    if (!PortalMesh->WasRecentlyRendered(0.1f)) return;
 
     APawn* Pawn = ViewingPlayer->GetPawn();
+    if (!Pawn) return;
 
-    if (!Pawn)
+    float Dist = FVector::Dist(
+        Pawn->GetActorLocation(),
+        GetActorLocation());
+
+    if (Dist > 2500.f) return;
+
+    CaptureAccum += 0.05f; // TickIntervalと合わせる
+
+    float CaptureInterval = 0.05f; // 近距離
+
+    if (Dist > 1500.f)
     {
-        return;
+        CaptureInterval = 0.2f;  // 遠距離は間引く
+    }
+    else if (Dist > 800.f)
+    {
+        CaptureInterval = 0.1f;  // 中距離
     }
 
-    float Dist =
-        FVector::Dist(
-            Pawn->GetActorLocation(),
-            GetActorLocation()
-        );
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("RT=%s"),
-        *GetNameSafe(Capture->TextureTarget));
-
-    if (Dist > 2500.f)
+    if (CaptureAccum < CaptureInterval)
     {
-        return;
+        return; // まだ描画しない
     }
 
-    // ClipPlane設定
+    CaptureAccum = 0.f;
+
     SetupClipPlane();
 
-    // デバッグ描画
-    //DrawPortalDebug();
-
-    // リンク先ポータル前方にカメラ配置
+    // リンク先ポータルの前方にカメラを配置
     FVector CamLocation =
-        LinkedPortal->GetActorLocation()
-        + LinkedPortal->GetActorForwardVector() * 10.f;
+        GetActorLocation()
+        + GetActorForwardVector() * 10.f;
 
-    // リンク先ポータル回転取得
+    // ===== 回転を追加 =====
+    // リンク先の正面方向（ForwardVector）をカメラが向く
     FRotator CamRotation =
-        LinkedPortal->GetActorRotation();
+        GetActorForwardVector().Rotation();
+    // ======================
 
-    UE_LOG(LogTemp, Error,
-        TEXT("%s LinkedPortalRot=%s"),
-        *GetName(),
-        *LinkedPortal->GetActorRotation().ToString());
+    Capture->SetWorldLocation(CamLocation);
+    Capture->SetWorldRotation(CamRotation);
 
-    // カメラ位置設定
-    if(!CamLocation.Equals(Capture->GetComponentLocation(), 1.f))
-    {
-        Capture->SetWorldLocation(CamLocation);
-    }
-
-
-    // シーン描画
-    DrawDebugSphere(
-        GetWorld(),
-        Capture->GetComponentLocation(),
-        30.f,
-        12,
-        FColor::Red,
-        false,
-        0.05f
-    );
-
-    DrawDebugLine(
-        GetWorld(),
-        Capture->GetComponentLocation(),
-        Capture->GetComponentLocation() +
-        Capture->GetForwardVector() * 300.f,
-        FColor::Green,
-        false,
-        0.05f,
-        0,
-        3.f
-    );
     Capture->CaptureScene();
 }
 
-// カメラ更新可能か確認
+// ===== CanUpdateCamera =====
+
 bool APortal::CanUpdateCamera() const
 {
-    UE_LOG(LogTemp, Error,
-        TEXT("%s ViewingPlayer=%s Local=%d"),
-        *GetName(),
-        *GetNameSafe(ViewingPlayer),
-        ViewingPlayer ? ViewingPlayer->IsLocalController() : 0);
-
-    // リンク先やCapture未設定なら不可
     if (!LinkedPortal || !Capture)
     {
         return false;
     }
 
-
-    // プレイヤー未設定
     if (!ViewingPlayer)
+    {
+        return false;
+    }
+
+    if (!Capture->TextureTarget)
     {
         return false;
     }
@@ -351,54 +234,156 @@ bool APortal::CanUpdateCamera() const
     return true;
 }
 
-// ClipPlane設定
+// ===== SetupClipPlane =====
+
 void APortal::SetupClipPlane()
 {
-    // ClipPlane有効化
     Capture->bEnableClipPlane = true;
-
-    // 切断位置
-    Capture->ClipPlaneBase =
-        LinkedPortal->GetActorLocation();
-
-    // 切断方向
-    Capture->ClipPlaneNormal =
-        LinkedPortal->GetActorForwardVector();
+    Capture->ClipPlaneBase = LinkedPortal->GetActorLocation();
+    Capture->ClipPlaneNormal = LinkedPortal->GetActorForwardVector();
 }
 
-// デバッグ描画
+// ===== DrawPortalDebug =====
+
 void APortal::DrawPortalDebug()
 {
-    // メインポータルで色変更
-    FColor DebugColor =
-        bMainPortal ?
-        FColor::Red :
-        FColor::Blue;
+    FColor DebugColor = bMainPortal ? FColor::Red : FColor::Blue;
 
-    // Capture位置描画
     DrawDebugSphere(
         GetWorld(),
         Capture->GetComponentLocation(),
-        30.f,
-        12,
-        DebugColor,
-        false,
-        0.f
-    );
+        30.f, 12, DebugColor, false, 0.f);
 
-    // Forward方向描画
     DrawDebugLine(
         GetWorld(),
         Capture->GetComponentLocation(),
-        Capture->GetComponentLocation()
-        + Capture->GetForwardVector() * 70.f,
-        FColor::Green,
-        false,
-        0.f
-    );
+        Capture->GetComponentLocation() + Capture->GetForwardVector() * 70.f,
+        FColor::Green, false, 0.f);
 }
 
-// テレポート判定処理
+// ===== InitializePortal（サーバーのみ）=====
+
+void APortal::InitializePortal()
+{
+    // Multicast経由で全クライアントにRTセットアップを命令
+    Multicast_SetupRT(bMainPortal);
+}
+
+// ===== Multicast_SetupRT =====
+// サーバーから全クライアントへRTセットアップを命令する
+// A->InitializePortal(), B->InitializePortal() の順で呼ばれる
+
+void APortal::Multicast_SetupRT_Implementation(bool bIsPortalA)
+{
+    // DedicatedServerは描画不要なのでスキップ
+    if (GetNetMode() == NM_DedicatedServer) return;
+
+    // 自分のCaptureRTを生成（Captureが書き込む先）
+    if (!CaptureRT)
+    {
+        CaptureRT = CreateRT();
+    }
+
+    // CaptureコンポーネントにRTを設定
+    // これにより CaptureScene() の結果が CaptureRT に書き込まれる
+    if (Capture)
+    {
+        Capture->TextureTarget = CaptureRT;
+    }
+
+    // ViewingPlayerが未設定の場合はローカルPCを取得
+    if (!ViewingPlayer)
+    {
+        ViewingPlayer = GetWorld()->GetFirstPlayerController();
+    }
+
+    if (LinkedPortal)
+    {
+        // 自分のCaptureRTをリンク先のDisplayRTとして渡す
+        // リンク先のメッシュに自分の映像を表示させる
+        if (!LinkedPortal->DisplayRT && LinkedPortal->PortalMID)
+        {
+            LinkedPortal->DisplayRT = CaptureRT;
+            LinkedPortal->ApplyDisplayRT();
+        }
+
+        // リンク先のCaptureRTを自分のDisplayRTとして受け取る
+        // 自分のメッシュにリンク先の映像を表示させる
+        if (LinkedPortal->CaptureRT)
+        {
+            DisplayRT = LinkedPortal->CaptureRT;
+            ApplyDisplayRT();
+        }
+
+        // Captureカメラの初期位置をリンク先ポータル前方に設定
+        // UpdateCaptureCameraで毎フレーム更新されるが初期値として設定
+        FVector Pos =
+            LinkedPortal->GetActorLocation()
+            + LinkedPortal->GetActorForwardVector() * 10.f;
+
+        Capture->SetWorldLocation(Pos);
+        Capture->SetWorldRotation(LinkedPortal->GetActorRotation());
+    }
+}
+
+// ===== OnRep_LinkedPortal =====
+// クライアントにLinkedPortalが同期された時に呼ばれる
+// Multicast_SetupRTより先にLinkedPortalが届いた場合のフォールバック
+
+void APortal::OnRep_LinkedPortal()
+{
+    // リンク先未設定またはDedicatedServerはスキップ
+    if (!LinkedPortal || GetNetMode() == NM_DedicatedServer) return;
+
+    // 両方のCaptureRTが揃っている場合のみ相互適用
+    // （Multicast_SetupRTが両方完了した後に届いたケース）
+    if (CaptureRT && LinkedPortal->CaptureRT)
+    {
+        // 自分のCaptureRTをリンク先のDisplayRTとして設定
+        LinkedPortal->DisplayRT = CaptureRT;
+        LinkedPortal->ApplyDisplayRT();
+
+        // リンク先のCaptureRTを自分のDisplayRTとして設定
+        DisplayRT = LinkedPortal->CaptureRT;
+        ApplyDisplayRT();
+    }
+}
+
+// ===== ApplyDisplayRT =====
+
+void APortal::ApplyDisplayRT()
+{
+    if (!PortalMID || !DisplayRT) return;
+
+    PortalMID->SetTextureParameterValue(
+        TEXT("PortalTexture"), DisplayRT);
+
+    UE_LOG(LogTemp, Warning,
+        TEXT("%s ApplyDisplayRT OK CaptureRT=%s DisplayRT=%s"),
+        *GetName(),
+        *GetNameSafe(CaptureRT),
+        *GetNameSafe(DisplayRT));
+}
+
+// ===== SetViewingPlayer =====
+
+void APortal::SetViewingPlayer(APlayerController* PC)
+{
+    ViewingPlayer = PC;
+}
+
+// ===== GetLifetimeReplicatedProps =====
+
+void APortal::GetLifetimeReplicatedProps(
+    TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(APortal, LinkedPortal);
+    DOREPLIFETIME(APortal, OwnerPlayer);
+}
+
+// ===== ProcessTeleport =====
+
 void APortal::ProcessTeleport()
 {
     if (OverlappingActors.Num() == 0)
@@ -410,329 +395,173 @@ void APortal::ProcessTeleport()
 
     for (AActor* Actor : OverlappingActors)
     {
-        // テレポート可能か確認
         if (!CanTeleport(Actor))
         {
             continue;
         }
 
-        // 現在位置取得
-        FVector CurrFront =
-            GetActorFrontPos(Actor);
+        FVector CurrFront = GetActorFrontPos(Actor);
 
-        // 初回登録
         if (!LastPos.Contains(Actor))
         {
             LastPos.Add(Actor, CurrFront);
             continue;
         }
 
-        // 前フレーム位置
-        FVector PrevFront =
-            LastPos[Actor];
+        FVector PrevFront = LastPos[Actor];
+        float PrevSide = GetSide(PrevFront);
+        float CurrSide = GetSide(CurrFront);
 
-        // 前回の平面位置
-        float PrevSide =
-            GetSide(PrevFront);
-
-        // 現在の平面位置
-        float CurrSide =
-            GetSide(CurrFront);
-
-        // 平面を跨いだか判定
         if (PrevSide * CurrSide < 0.f)
         {
-            // ポータル範囲内のみ
             if (IsInsidePortalBounds(CurrFront))
             {
                 TeleportList.Add(Actor);
             }
         }
 
-        // 位置更新
         LastPos[Actor] = CurrFront;
     }
 
-    // テレポート実行
     for (AActor* Actor : TeleportList)
     {
         TeleportActor(Actor);
     }
 }
 
-// Actor前方位置取得
+// ===== GetActorFrontPos =====
+
 FVector APortal::GetActorFrontPos(AActor* Actor) const
 {
-    // Characterの場合
     if (ACharacter* Char = Cast<ACharacter>(Actor))
     {
-        // カプセル半径取得
         float Radius =
-            Char->GetCapsuleComponent()
-            ->GetScaledCapsuleRadius();
+            Char->GetCapsuleComponent()->GetScaledCapsuleRadius();
 
-        // 前方端位置を返す
-        return
-            Actor->GetActorLocation() +
-            Actor->GetActorForwardVector() * Radius;
+        return Actor->GetActorLocation()
+            + Actor->GetActorForwardVector() * Radius;
     }
 
-    // 通常Actor
     return Actor->GetActorLocation();
 }
 
-// ポータル平面位置取得
+// ===== GetPlanePos =====
+
 FVector APortal::GetPlanePos() const
 {
-    return
-        GetActorLocation() +
-        GetActorForwardVector() * PortalPlaneOffset;
+    return GetActorLocation()
+        + GetActorForwardVector() * PortalPlaneOffset;
 }
 
-// 平面前後判定
+// ===== GetSide =====
+
 float APortal::GetSide(const FVector& Pos) const
 {
     return FVector::DotProduct(
         Pos - GetPlanePos(),
-        GetActorForwardVector()
-    );
+        GetActorForwardVector());
 }
 
-// ポータル範囲内判定
+// ===== IsInsidePortalBounds =====
+
 bool APortal::IsInsidePortalBounds(const FVector& WorldPos) const
 {
-    // ローカル座標変換
     FVector Local =
-        GetActorTransform()
-        .InverseTransformPosition(WorldPos);
+        GetActorTransform().InverseTransformPosition(WorldPos);
 
     FVector Extent = Trigger->GetScaledBoxExtent();
 
-    // Y,Z範囲判定
     return
         FMath::Abs(Local.Y) <= Extent.Y &&
         FMath::Abs(Local.Z) <= Extent.Z;
 }
 
-// テレポート可能か
+// ===== CanTeleport =====
+
 bool APortal::CanTeleport(AActor* Actor) const
 {
     if (!IsValid(Actor)) return false;
 
-    // クールタイム中
-    if (RecentlyTeleported.Contains(Actor))
-    {
-        return false;
-    }
+    if (RecentlyTeleported.Contains(Actor)) return false;
 
-    // リンク先なし
-    if (!LinkedPortal)
-    {
-        return false;
-    }
+    if (!LinkedPortal) return false;
 
     return true;
 }
 
-// テレポート実行
+// ===== TeleportActor =====
+
 void APortal::TeleportActor(AActor* Actor)
 {
-    if (!Actor || !LinkedPortal)
-    {
-        return;
-    }
+    if (!Actor || !LinkedPortal) return;
 
-    const FTransform PortalTransform =
-        GetActorTransform();
+    const FTransform This = GetActorTransform();
+    const FTransform Target = LinkedPortal->GetActorTransform();
 
-    // 現在ポータルTransform
-    const FTransform This =
-        PortalTransform;
-
-    // リンク先Transform
-    const FTransform Target =
-        LinkedPortal->GetActorTransform();
-
-    // ローカル変換
     FTransform Local =
-        Actor->GetActorTransform()
-        .GetRelativeTransform(This);
+        Actor->GetActorTransform().GetRelativeTransform(This);
 
-    // 新しいワールドTransform
-    FTransform NewWorld =
-        Local * Target;
+    FTransform NewWorld = Local * Target;
 
-    FVector NewLocation =
-        NewWorld.GetLocation();
+    FVector NewLocation = NewWorld.GetLocation();
+    NewLocation += LinkedPortal->GetActorForwardVector() * 50.f;
 
-    // 少し前へ押し出す
-    NewLocation +=
-        LinkedPortal->GetActorForwardVector() * 50.f;
-
-    // CharacterならTeleportTo
     if (ACharacter* Char = Cast<ACharacter>(Actor))
     {
         Char->TeleportTo(
             NewLocation,
-            NewWorld.GetRotation().Rotator()
-        );
+            NewWorld.GetRotation().Rotator());
     }
     else
     {
-        // 通常Actor
         Actor->SetActorLocationAndRotation(
             NewLocation,
-            NewWorld.GetRotation().Rotator()
-        );
+            NewWorld.GetRotation().Rotator());
     }
 
-    // リンク先Overlapへ追加
     LinkedPortal->OverlappingActors.Add(Actor);
-
-    // 新しい位置登録
     LinkedPortal->LastPos.FindOrAdd(Actor) =
         LinkedPortal->GetActorFrontPos(Actor);
 
-    // Character速度変換
     if (ACharacter* Char = Cast<ACharacter>(Actor))
     {
-        FVector Vel =
-            Char->GetCharacterMovement()->Velocity;
-
-        // ローカル速度へ変換
-        FVector LocalVel =
-            This.InverseTransformVector(Vel);
-
-        // 新ポータル方向へ変換
-        FVector NewVel =
-            Target.TransformVector(LocalVel);
-
-        // 速度適用
-        Char->GetCharacterMovement()->Velocity =
-            NewVel;
+        FVector Vel = Char->GetCharacterMovement()->Velocity;
+        FVector LocalVel = This.InverseTransformVector(Vel);
+        FVector NewVel = Target.TransformVector(LocalVel);
+        Char->GetCharacterMovement()->Velocity = NewVel;
     }
 
-    // クールタイム登録
     RecentlyTeleported.Add(Actor);
 
     FTimerHandle Timer;
-
-    // 一定時間後クールタイム解除
     GetWorld()->GetTimerManager().SetTimer(
         Timer,
         FTimerDelegate::CreateUObject(
-            this,
-            &APortal::ResetTeleport,
-            Actor
-        ),
+            this, &APortal::ResetTeleport, Actor),
         TeleportCooldown,
-        false
-    );
+        false);
 }
 
-// テレポート状態リセット
+// ===== ResetTeleport =====
+
 void APortal::ResetTeleport(AActor* Actor)
 {
     RecentlyTeleported.Remove(Actor);
 
     if (!Actor) return;
 
-    FVector Front =
-        GetActorFrontPos(Actor);
-
-    // 現在位置更新
+    FVector Front = GetActorFrontPos(Actor);
     LastPos.FindOrAdd(Actor) = Front;
 
     if (LinkedPortal)
     {
-        LinkedPortal->LastPos.FindOrAdd(Actor) =
-            Front;
-
+        LinkedPortal->LastPos.FindOrAdd(Actor) = Front;
         LinkedPortal->OverlappingActors.Add(Actor);
     }
 }
 
-// ===== Initialize =====
+// ===== OnOverlap =====
 
-// ポータル初期化
-void APortal::InitializePortal()
-{
-    UE_LOG(LogTemp, Error,
-        TEXT("%s LinkedPortal=%s"),
-        *GetName(),
-        *GetNameSafe(LinkedPortal));
-
-    if (!LinkedPortal || !Capture) return;
-
-    // RenderTarget設定
-    if (RenderTarget)
-    {
-        Capture->TextureTarget = RenderTarget;
-    }
-
-    // マテリアルへTexture設定
-    if (PortalMID && LinkedPortal->RenderTarget)
-    {
-        PortalMID->SetTextureParameterValue(
-            TEXT("PortalTexture"),
-            RenderTarget
-        );
-    }
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("%s Display=%s Capture=%s"),
-        *GetName(),
-        *GetNameSafe(LinkedPortal->RenderTarget),
-        *GetNameSafe(RenderTarget));
-
-    // Capture位置
-    FVector Pos =
-        LinkedPortal->GetActorLocation()
-        + LinkedPortal->GetActorForwardVector() * 20.f;
-
-    // Capture回転
-    FRotator Rot =
-        LinkedPortal->GetActorRotation();
-
-    UE_LOG(LogTemp, Error,
-        TEXT("%s LinkedPortalRot=%s"),
-        *GetName(),
-        *LinkedPortal->GetActorRotation().ToString());
-
-    Capture->SetWorldLocation(Pos);
-
-    Capture->SetWorldRotation(Rot);
-
-    Capture->TextureTarget = RenderTarget;
-
-    // デバッグログ
-    UE_LOG(LogTemp, Warning,
-        TEXT("%s Display=%s Capture=%s"),
-        *GetName(),
-        *GetNameSafe(LinkedPortal->RenderTarget),
-        *GetNameSafe(RenderTarget));
-}
-
-// 観測プレイヤー設定
-void APortal::SetViewingPlayer(APlayerController* PC)
-{
-    ViewingPlayer = PC;
-}
-
-// レプリケーション設定
-void APortal::GetLifetimeReplicatedProps(
-    TArray<FLifetimeProperty>& OutLifetimeProps
-) const
-{
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-    // LinkedPortal同期
-    DOREPLIFETIME(APortal, LinkedPortal);
-}
-
-// ===== Overlap =====
-
-// Overlap開始
 void APortal::OnOverlap(
     UPrimitiveComponent*,
     AActor* OtherActor,
@@ -743,25 +572,19 @@ void APortal::OnOverlap(
 {
     if (!OtherActor) return;
 
-    // 重なりActor登録
     OverlappingActors.Add(OtherActor);
+    LastPos.FindOrAdd(OtherActor) = GetActorFrontPos(OtherActor);
 
-    // 初期位置保存
-    LastPos.FindOrAdd(OtherActor) =
-        GetActorFrontPos(OtherActor);
-
-    // Characterの壁衝突を無効化
     if (ACharacter* Char = Cast<ACharacter>(OtherActor))
     {
         Char->GetCapsuleComponent()
             ->SetCollisionResponseToChannel(
-                ECC_WorldStatic,
-                ECR_Ignore
-            );
+                ECC_WorldStatic, ECR_Ignore);
     }
 }
 
-// Overlap終了
+// ===== OnEndOverlap =====
+
 void APortal::OnEndOverlap(
     UPrimitiveComponent*,
     AActor* OtherActor,
@@ -770,18 +593,13 @@ void APortal::OnEndOverlap(
 {
     if (!OtherActor) return;
 
-    // 管理リスト削除
     OverlappingActors.Remove(OtherActor);
-
     LastPos.Remove(OtherActor);
 
-    // 壁衝突を元に戻す
     if (ACharacter* Char = Cast<ACharacter>(OtherActor))
     {
         Char->GetCapsuleComponent()
             ->SetCollisionResponseToChannel(
-                ECC_WorldStatic,
-                ECR_Block
-            );
+                ECC_WorldStatic, ECR_Block);
     }
 }

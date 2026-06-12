@@ -73,11 +73,6 @@ void APortalShooter::FireInternal(
     FVector End =
         Start + (Forward * 10000.f);
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("Trace Start=%s End=%s"),
-        *Start.ToString(),
-        *End.ToString());
-
     // ===== Trace =====
 
     FCollisionQueryParams QueryParams;
@@ -119,10 +114,6 @@ void APortalShooter::FireInternal(
 
         return;
     }
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("Hit Actor = %s"),
-        *GetNameSafe(Hit.GetActor()));
 
     // ===== NoPortal =====
 
@@ -222,26 +213,6 @@ void APortalShooter::FireInternal(
             -CheckHit.ImpactNormal,
             Up).Rotator();
 
-    // ===== Debug =====
-
-    DrawDebugSphere(
-        World,
-        FrontLocation,
-        20.f,
-        12,
-        FColor::Green,
-        false,
-        5.f);
-
-    DrawDebugSphere(
-        World,
-        BackLocation,
-        20.f,
-        12,
-        FColor::Blue,
-        false,
-        5.f);
-
     // ===== Destroy Old =====
 
     if (IsValid(CurrentPortalA))
@@ -286,24 +257,18 @@ void APortalShooter::FireInternal(
     }
 
     // ===== Setup =====
-
     A->OwnerPlayer = PC;
     B->OwnerPlayer = PC;
-
-    A->RenderTarget = CreatePortalRT();
-    B->RenderTarget = CreatePortalRT();
-
     A->bMainPortal = true;
     B->bMainPortal = false;
-
     A->LinkedPortal = B;
     B->LinkedPortal = A;
 
+    // ホストはBeginPlay時点でLinkedPortalが未設定なので
+    // ここでRTセットアップを明示的にトリガー
+    // （クライアントはOnRep_LinkedPortal経由で自動実行）
     A->InitializePortal();
     B->InitializePortal();
-
-    CurrentPortalA = A;
-    CurrentPortalB = B;
 
     if (PC)
     {
@@ -311,8 +276,8 @@ void APortalShooter::FireInternal(
         B->SetViewingPlayer(PC);
     }
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("Portal Spawn Success"));
+    CurrentPortalA = A;
+    CurrentPortalB = B;
 }
 
 void APortalShooter::UpdatePreview(
