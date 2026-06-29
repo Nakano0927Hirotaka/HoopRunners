@@ -1430,3 +1430,5 @@ HoopRunners/Intermediate/Build/Win64/
 HoopRunners/Saved/
 *.exe
 HoopRunners/Binaries/Win64/
+HoopRunners/.vs/HoopRunners/
+HoopRunners/Intermediate/Build/BuildRulesProjects/
