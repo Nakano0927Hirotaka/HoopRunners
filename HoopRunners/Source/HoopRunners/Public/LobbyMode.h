@@ -15,7 +15,7 @@ public:
     int32 MaxPlayers = 2;
 
     UPROPERTY(EditDefaultsOnly, Category = "Lobby")
-    FString GameMapName = TEXT("FirstPersonMap");
+    FString GameMapName = TEXT("/Game/FirstPerson/Lvl_FirstPerson");
 
     virtual void PostLogin(APlayerController* NewPlayer) override;
 
@@ -33,4 +33,6 @@ public:
 
 private:
     int32 CurrentPlayerCount = 0;
+
+    virtual void Logout(AController* Exiting) override;
 };
