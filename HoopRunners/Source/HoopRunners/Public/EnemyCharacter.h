@@ -1,4 +1,4 @@
-ï»¿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -20,7 +20,7 @@ enum class EEnemyState : uint8
 };
 
 UCLASS()
-class HOOP_RUNNERS_API AEnemyCharacter : public ACharacter
+class HOOPRUNNERS_API AEnemyCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
@@ -45,24 +45,24 @@ protected:
 
 	UPROPERTY()
 	UAISenseConfig_Sight* SightConfig;
-	
-	//ç¾åœ¨ã‚¹ãƒ†ãƒ¼ãƒˆ
+
+	//Œ»İƒXƒe[ƒg
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	EEnemyState CurrentState;
 
-	//ç¾åœ¨ã‚¿ãƒ¼ã‚²ãƒƒãƒˆ
+	//Œ»İƒ^[ƒQƒbƒg
 	UPROPERTY()
 	AActor* CurrentTarget;
 
-	//æª»åº§æ¨™
+	//ŸBÀ•W
 	UPROPERTY(EditAnywhere, Category = "Capture")
 	FVector CageLocation;
 
-	//å®çŸ³ã®æ•°
+	//•óÎ‚Ì”
 	UPROPERTY(EditAnywhere)
 	int32 GemThreshold = 10;
 
-	//æ™‚é–“æ¡ä»¶
+	//ŠÔğŒ
 	UPROPERTY(EditAnywhere)
 	float FullChaseStartTime = 900.0f;
 
@@ -71,13 +71,13 @@ protected:
 	float DefaultSightRadius;
 	float DefaultLoseSightRadius;
 
-	//ã‚¹ã‚¿ãƒ³ä¸­ã‹
+	//ƒXƒ^ƒ“’†‚©
 	bool bIsStunned;
 
-	//ã‚¹ã‚¿ãƒ³ã‚¿ã‚¤ãƒãƒ¼
+	//ƒXƒ^ƒ“ƒ^ƒCƒ}[
 	FTimerHandle StunTimerHandle;
 
-	//ã‚¹ã‚¿ãƒ³è§£é™¤
+	//ƒXƒ^ƒ“‰ğœ
 	void EndStun();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
@@ -85,26 +85,26 @@ protected:
 
 	void SetInfiniteSight(bool bEnable);
 
-	//è¦–ç•Œæ›´æ–°
+	//‹ŠEXV
 	UFUNCTION()
 	void OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
 
-	//å·¡å›
+	//„‰ñ
 	void Patrol();
 
-	//é€šå¸¸è¿½è·¡
+	//’Êí’ÇÕ
 	void Chase();
 
-	//å®Œå…¨è¿½è·¡
+	//Š®‘S’ÇÕ
 	void FullChase();
 
-	//æ•ç²
+	//•ßŠl
 	void CapturePlayer(ACharacter* Player);
 
-	//çŠ¶æ…‹æ›´æ–°
+	//ó‘ÔXV
 	void UpdateState();
 
-	//æ¥è§¦åˆ¤å®š
+	//ÚG”»’è
 	UFUNCTION()
 	void OnOverlapBegin(
 		UPrimitiveComponent* OverlappedComp,
