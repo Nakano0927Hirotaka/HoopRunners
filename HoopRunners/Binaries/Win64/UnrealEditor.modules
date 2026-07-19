@@ -2,6 +2,10 @@
 	"BuildId": "43139311",
 	"Modules": 
 	{
+<<<<<<< HEAD
 		"HoopRunners": "UnrealEditor-HoopRunners-6868.dll"
+=======
+		"HoopRunners": "UnrealEditor-HoopRunners-3186.dll"
+>>>>>>> Koguchi
 	}
 }
