@@ -23,6 +23,14 @@ void AMyPlayerController::BeginPlay()
 void AMyPlayerController::UpdatePlayers_Implementation(int32 Current, int32 Max)
 {
     UE_LOG(LogTemp, Warning, TEXT("UpdatePlayers_Implementation called: %d/%d"), Current, Max);
+    
+    UE_LOG(LogTemp, Warning,
+        TEXT("UpdatePlayers called PC=%s Local=%d Current=%d Max=%d"),
+        *GetName(),
+        IsLocalPlayerController(),
+        Current,
+        Max);
+
     OnPlayerCountUpdated(Current, Max);
 }
 
