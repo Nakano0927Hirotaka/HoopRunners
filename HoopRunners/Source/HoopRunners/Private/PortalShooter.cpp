@@ -1,17 +1,11 @@
 ﻿// PortalShooter.cpp
 
 #include "PortalShooter.h"
-
 #include "Portal.h"
-
 #include "DrawDebugHelpers.h"
-
 #include "Engine/TextureRenderTarget2D.h"
-
 #include "GameFramework/PlayerController.h"
-
 #include "Kismet/KismetSystemLibrary.h"
-
 #include "Engine/TextureRenderTarget2D.h"
 
 APortalShooter::APortalShooter()
@@ -127,11 +121,9 @@ void APortalShooter::FireInternal(
         return;
     }
 
-    FVector HitPoint =
-        Hit.ImpactPoint;
+    FVector HitPoint = Hit.ImpactPoint;
 
-    FVector Normal =
-        Hit.ImpactNormal.GetSafeNormal();
+    FVector Normal = Hit.ImpactNormal.GetSafeNormal();
 
     // ===== Back Wall =====
 
@@ -153,7 +145,6 @@ void APortalShooter::FireInternal(
         UKismetSystemLibrary::PrintString(
             this,
             TEXT("No Back Wall"));
-
         return;
     }
 
@@ -199,9 +190,11 @@ void APortalShooter::FireInternal(
     FVector FrontLocation =
         HitPoint + Normal * PortalOffset;
 
+    FVector BackNormal =
+        CheckHit.ImpactNormal.GetSafeNormal();
+
     FVector BackLocation =
-        CheckHit.ImpactPoint
-        - Normal * PortalOffset;
+        CheckHit.ImpactPoint - BackNormal * (PortalOffset * 2);
 
     FRotator FrontRot =
         FRotationMatrix::MakeFromXZ(

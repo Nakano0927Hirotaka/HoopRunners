@@ -35,7 +35,7 @@ void ALobbyMode::StartGame()
     if (CurrentPlayerCount < MaxPlayers)
         return;
 
-    GameMapName = TEXT("/Game/FirstPerson/Lvl_FirstPerson");
+    GameMapName = TEXT("/Game/FirstPerson/Lvl_Hoshino");
 
     bool bResult = GetWorld()->ServerTravel(GameMapName + TEXT("?listen"), true);
 
