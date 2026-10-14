@@ -81,11 +81,17 @@ public:
     UPROPERTY(EditAnywhere, Category = "Portal")
     TSubclassOf<APortal> PortalClass;
 
+    // 壁の厚さ
     UPROPERTY(EditAnywhere, Category = "Portal")
     float CellSize = 100.f;
 
+    // ポータルと壁の距離
     UPROPERTY(EditAnywhere, Category = "Portal")
     float PortalOffset = 10.f;
+
+    // 床からポータル中心までの高さ（cm）
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Portal")
+    float PortalHeightFromFloor = 200.0f;
 
     UPROPERTY(EditAnywhere, Category = "Portal")
     UTextureRenderTarget2D* RT_PortalA;
@@ -98,10 +104,18 @@ public:
     // Preview Class
     // ========================================
 
-    UPROPERTY(EditAnywhere, Category = "Portal Preview")
+    // Preview Class
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Portal Preview", meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<AActor> ValidPreviewActor = nullptr;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Portal Preview", meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<AActor> InvalidPreviewActor = nullptr;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Portal Preview")
     TSubclassOf<AActor> ValidPreviewClass;
 
-    UPROPERTY(EditAnywhere, Category = "Portal Preview")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Portal Preview")
     TSubclassOf<AActor> InvalidPreviewClass;
 
 
@@ -123,14 +137,7 @@ private:
     // ========================================
 
     UPROPERTY()
-    AActor* ValidPreviewActor;
-
-    UPROPERTY()
-    AActor* InvalidPreviewActor;
-
-    UPROPERTY()
     AActor* CurrentPreviewActor;
-
 
     // ========================================
     // 状態

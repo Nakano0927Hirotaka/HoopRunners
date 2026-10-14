@@ -16,9 +16,7 @@ APortalShooter::APortalShooter()
 
     bReplicates = true;
 
-    RootComponent =
-        CreateDefaultSubobject<USceneComponent>(
-            TEXT("Root"));
+    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
     CurrentPortalA = nullptr;
     CurrentPortalB = nullptr;
@@ -39,48 +37,6 @@ APortalShooter::APortalShooter()
 void APortalShooter::BeginPlay()
 {
     Super::BeginPlay();
-
-    // プレビュー用の青ポータルを生成
-    if (ValidPreviewClass)
-    {
-        FActorSpawnParameters SpawnParams;
-
-        SpawnParams.SpawnCollisionHandlingOverride =
-            ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-        ValidPreviewActor =
-            GetWorld()->SpawnActor<AActor>(
-                ValidPreviewClass,
-                FVector::ZeroVector,
-                FRotator::ZeroRotator,
-                SpawnParams);
-
-        if (ValidPreviewActor)
-        {
-            ValidPreviewActor->SetActorHiddenInGame(true);
-        }
-    }
-
-    // プレビュー用の赤ポータルを生成
-    if (InvalidPreviewClass)
-    {
-        FActorSpawnParameters SpawnParams;
-
-        SpawnParams.SpawnCollisionHandlingOverride =
-            ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-        InvalidPreviewActor =
-            GetWorld()->SpawnActor<AActor>(
-                InvalidPreviewClass,
-                FVector::ZeroVector,
-                FRotator::ZeroRotator,
-                SpawnParams);
-
-        if (InvalidPreviewActor)
-        {
-            InvalidPreviewActor->SetActorHiddenInGame(true);
-        }
-    }
 }
 
 
@@ -119,8 +75,7 @@ void APortalShooter::Tick(float DeltaTime)
 
     PC->GetPlayerViewPoint(Start, Rotation);
 
-    FVector Forward =
-        Rotation.Vector();
+    FVector Forward = Rotation.Vector();
 
     UpdatePreview(Start, Forward);
 }
@@ -155,13 +110,6 @@ void APortalShooter::ServerFire_Implementation(
     FVector Forward)
 {
     FireInternal(Start, Forward);
-
-    UE_LOG(
-        LogTemp,
-        Warning,
-        TEXT("ServerFire Start=%s Forward=%s"),
-        *Start.ToString(),
-        *Forward.ToString());
 }
 
 
@@ -199,9 +147,7 @@ bool APortalShooter::CanPlacePortal(
     // Owner
     // ========================================================
 
-    APawn* OwnerPawn =
-        Cast<APawn>(GetOwner());
-
+    APawn* OwnerPawn = Cast<APawn>(GetOwner());
 
     // ========================================================
     // Trace設定
@@ -231,19 +177,11 @@ bool APortalShooter::CanPlacePortal(
     // 前方Trace
     // ========================================================
 
-    FVector End =
-        Start + Forward * 10000.f;
+    FVector End = Start + Forward * 10000.f;
 
     FHitResult Hit;
 
-    bool bHit =
-        World->LineTraceSingleByChannel(
-            Hit,
-            Start,
-            End,
-            ECC_Visibility,
-            QueryParams);
-
+    bool bHit = World->LineTraceSingleByChannel( Hit, Start, End, ECC_Visibility, QueryParams);
 
     if (!bHit)
     {
@@ -255,8 +193,7 @@ bool APortalShooter::CanPlacePortal(
     // NoPortal
     // ========================================================
 
-    if (Hit.GetActor() &&
-        Hit.GetActor()->ActorHasTag(TEXT("NoPortal")))
+    if (Hit.GetActor() && Hit.GetActor()->ActorHasTag(TEXT("NoPortal")))
     {
         return false;
     }
@@ -266,29 +203,24 @@ bool APortalShooter::CanPlacePortal(
     // ヒット位置・法線
     // ========================================================
 
-    FVector HitPoint =
-        Hit.ImpactPoint;
+    FVector HitPoint = Hit.ImpactPoint;
 
-    FVector Normal =
-        Hit.ImpactNormal.GetSafeNormal();
+    FVector Normal = Hit.ImpactNormal.GetSafeNormal();
 
 
     // ========================================================
     // 背面の壁を確認
     // ========================================================
 
-    FVector CheckPos =
-        HitPoint - Normal * CellSize;
+    FVector CheckPos = HitPoint - Normal * CellSize;
 
     FHitResult CheckHit;
 
-    bool bHasWall =
-        World->LineTraceSingleByChannel(
+    bool bHasWall = World->LineTraceSingleByChannel(
             CheckHit,
             CheckPos + Normal * 10.f,
             CheckPos - Normal * 10.f,
-            ECC_Visibility,
-            QueryParams);
+            ECC_Visibility, QueryParams);
 
 
     if (!bHasWall)
@@ -302,9 +234,7 @@ bool APortalShooter::CanPlacePortal(
     // 2ブロック分の厚みチェック
     // ========================================================
 
-    FVector CheckPos2 =
-        HitPoint -
-        Normal * (CellSize * 2.f);
+    FVector CheckPos2 = HitPoint - Normal * (CellSize * 2.f);
 
     FHitResult CheckHit2;
 
@@ -313,8 +243,7 @@ bool APortalShooter::CanPlacePortal(
             CheckHit2,
             CheckPos2 + Normal * 10.f,
             CheckPos2 - Normal * 10.f,
-            ECC_Visibility,
-            QueryParams);
+            ECC_Visibility, QueryParams);
 
 
     if (bSecondWall)
@@ -328,15 +257,11 @@ bool APortalShooter::CanPlacePortal(
     // 回転用Upベクトル
     // ========================================================
 
-    FVector Up =
-        FVector::UpVector;
+    FVector Up = FVector::UpVector;
 
-    if (FMath::Abs(
-        FVector::DotProduct(Normal, Up))
-        > 0.99f)
+    if (FMath::Abs(FVector::DotProduct(Normal, Up)) > 0.99f)
     {
-        Up =
-            FVector::ForwardVector;
+        Up = FVector::ForwardVector;
     }
 
 
@@ -344,31 +269,23 @@ bool APortalShooter::CanPlacePortal(
     // 表側ポータル
     // ========================================================
 
-    OutFrontLocation =
-        HitPoint +
-        Normal * PortalOffset;
+    OutFrontLocation = HitPoint + Normal * PortalOffset;
 
     OutFrontRotation =
-        FRotationMatrix::MakeFromXZ(
-            Normal,
-            Up).Rotator();
+        FRotationMatrix::MakeFromXZ( Normal, Up).Rotator();
 
 
     // ========================================================
     // 裏側ポータル
     // ========================================================
 
-    FVector BackNormal =
-        CheckHit.ImpactNormal.GetSafeNormal();
+    FVector BackNormal = CheckHit.ImpactNormal.GetSafeNormal();
 
     OutBackLocation =
-        CheckHit.ImpactPoint -
-        BackNormal * (PortalOffset * 2.f);
+        CheckHit.ImpactPoint - BackNormal * (PortalOffset * 2.f);
 
     OutBackRotation =
-        FRotationMatrix::MakeFromXZ(
-            -BackNormal,
-            Up).Rotator();
+        FRotationMatrix::MakeFromXZ(-BackNormal, Up).Rotator();
 
 
     // ========================================================
@@ -384,7 +301,6 @@ bool APortalShooter::CanPlacePortal(
 //
 // 実際にポータルを生成する。
 // ============================================================
-
 void APortalShooter::FireInternal(
     FVector Start, FVector Forward)
 {
@@ -394,7 +310,6 @@ void APortalShooter::FireInternal(
     {
         return;
     }
-
 
     // ========================================================
     // ポータル設置可能判定
@@ -419,10 +334,7 @@ void APortalShooter::FireInternal(
 
     if (!bCanPlace)
     {
-        UE_LOG(
-            LogTemp,
-            Warning,
-            TEXT("Portal cannot be placed"));
+        UE_LOG(LogTemp, Warning, TEXT("Portal cannot be placed"));
 
         return;
     }
@@ -432,14 +344,10 @@ void APortalShooter::FireInternal(
     // Owner
     // ========================================================
 
-    APawn* OwnerPawn =
-        Cast<APawn>(GetOwner());
+    APawn* OwnerPawn = Cast<APawn>(GetOwner());
 
-    APlayerController* PC =
-        OwnerPawn
-        ? Cast<APlayerController>(
-            OwnerPawn->GetController())
-        : nullptr;
+    APlayerController* PC = OwnerPawn ? Cast<APlayerController>(
+            OwnerPawn->GetController()) : nullptr;
 
 
     // ========================================================
@@ -467,11 +375,9 @@ void APortalShooter::FireInternal(
 
     FActorSpawnParameters SpawnParams;
 
-    SpawnParams.Owner =
-        GetOwner();
+    SpawnParams.Owner = GetOwner();
 
-    SpawnParams.Instigator =
-        OwnerPawn;
+    SpawnParams.Instigator = OwnerPawn;
 
     SpawnParams.SpawnCollisionHandlingOverride =
         ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -562,21 +468,52 @@ void APortalShooter::FireInternal(
     CurrentPortalB = B;
 
 
-    UE_LOG(
-        LogTemp,
-        Warning,
-        TEXT("Portal Created"));
+    UE_LOG( LogTemp, Warning, TEXT("Portal Created"));
 }
 
 
 // ============================================================
 // StartPortalPreview
-//
 // 右クリック押下
 // ============================================================
 
 void APortalShooter::StartPortalPreview()
 {
+    if (!GetWorld())
+    {
+        return;
+    }
+
+    // 青いプレビューを生成
+    if (!IsValid(ValidPreviewActor) && ValidPreviewClass)
+    {
+        ValidPreviewActor = GetWorld()->SpawnActor<AActor>(
+            ValidPreviewClass,
+            FVector::ZeroVector,
+            FRotator::ZeroRotator
+        );
+
+        if (IsValid(ValidPreviewActor))
+        {
+            ValidPreviewActor->SetActorHiddenInGame(true);
+        }
+    }
+
+    // 赤いプレビューを生成
+    if (!IsValid(InvalidPreviewActor) && InvalidPreviewClass)
+    {
+        InvalidPreviewActor = GetWorld()->SpawnActor<AActor>(
+            InvalidPreviewClass,
+            FVector::ZeroVector,
+            FRotator::ZeroRotator
+        );
+
+        if (IsValid(InvalidPreviewActor))
+        {
+            InvalidPreviewActor->SetActorHiddenInGame(true);
+        }
+    }
+
     bPreviewing = true;
 
     UpdatePreviewColor();
@@ -585,7 +522,6 @@ void APortalShooter::StartPortalPreview()
 
 // ============================================================
 // StopPortalPreview
-//
 // 右クリックを離した
 // ============================================================
 
@@ -629,26 +565,17 @@ void APortalShooter::UpdatePreview(
         return;
     }
 
-
     // ========================================================
     // 設置可能判定
     // ========================================================
-
     FVector FrontLocation;
     FRotator FrontRotation;
 
     FVector BackLocation;
     FRotator BackRotation;
 
-
     bCanPlacePortal =
-        CanPlacePortal(
-            Start,
-            Forward,
-            FrontLocation,
-            FrontRotation,
-            BackLocation,
-            BackRotation);
+        CanPlacePortal(Start, Forward, FrontLocation, FrontRotation, BackLocation, BackRotation);
 
 
     // ========================================================
@@ -664,18 +591,14 @@ void APortalShooter::UpdatePreview(
         return;
     }
 
-
-    FVector End =
-        Start + Forward * 10000.f;
-
+    FVector End = Start + Forward * 10000.f;
 
     FCollisionQueryParams QueryParams;
 
     QueryParams.AddIgnoredActor(this);
 
 
-    APawn* OwnerPawn =
-        Cast<APawn>(GetOwner());
+    APawn* OwnerPawn = Cast<APawn>(GetOwner());
 
     if (OwnerPawn)
     {
@@ -692,16 +615,30 @@ void APortalShooter::UpdatePreview(
         QueryParams.AddIgnoredActor(CurrentPortalB);
     }
 
+    FCollisionQueryParams TraceParams;
+    TraceParams.AddIgnoredActor(this);
+
+    // プレイヤーを無視
+    if (APawn* Pawn = Cast<APawn>(GetOwner()))
+    {
+        TraceParams.AddIgnoredActor(Pawn);
+    }
+
+    // プレビューActor自身を無視
+    if (IsValid(ValidPreviewActor.Get()))
+    {
+        TraceParams.AddIgnoredActor(ValidPreviewActor.Get());
+    }
+
+    if (IsValid(InvalidPreviewActor.Get()))
+    {
+        TraceParams.AddIgnoredActor(InvalidPreviewActor.Get());
+    }
 
     FHitResult Hit;
 
-    bool bHit =
-        World->LineTraceSingleByChannel(
-            Hit,
-            Start,
-            End,
-            ECC_Visibility,
-            QueryParams);
+    bool bHit = World->LineTraceSingleByChannel(
+        Hit, Start, End, ECC_Visibility, TraceParams);
 
 
     // ========================================================
@@ -729,32 +666,19 @@ void APortalShooter::UpdatePreview(
     // ========================================================
     // プレビュー位置
     // ========================================================
-
     FVector PreviewLocation =
-        Hit.ImpactPoint +
-        Hit.ImpactNormal.GetSafeNormal() * 2.f;
+        Hit.ImpactPoint + Hit.ImpactNormal.GetSafeNormal() * 2.f;
 
+    FVector Normal = Hit.ImpactNormal.GetSafeNormal();
 
-    FVector Normal =
-        Hit.ImpactNormal.GetSafeNormal();
+    FVector Up = FVector::UpVector;
 
-
-    FVector Up =
-        FVector::UpVector;
-
-    if (FMath::Abs(
-        FVector::DotProduct(Normal, Up))
-        > 0.99f)
+    if (FMath::Abs(FVector::DotProduct(Normal, Up)) > 0.99f)
     {
-        Up =
-            FVector::ForwardVector;
+        Up = FVector::ForwardVector;
     }
 
-
-    FRotator PreviewRotation =
-        FRotationMatrix::MakeFromXZ(
-            Normal,
-            Up).Rotator();
+    FRotator PreviewRotation = FRotationMatrix::MakeFromXZ(Normal, Up).Rotator();
 
 
     // ========================================================
@@ -770,11 +694,9 @@ void APortalShooter::UpdatePreview(
 
     if (CurrentPreviewActor)
     {
-        CurrentPreviewActor->SetActorLocation(
-            PreviewLocation);
+        CurrentPreviewActor->SetActorLocation(PreviewLocation);
 
-        CurrentPreviewActor->SetActorRotation(
-            PreviewRotation);
+        CurrentPreviewActor->SetActorRotation(PreviewRotation);
     }
 }
 
@@ -839,20 +761,16 @@ bool APortalShooter::IsPortalPlaceable() const
 UTextureRenderTarget2D*
 APortalShooter::CreatePortalRT()
 {
-    UTextureRenderTarget2D* RT =
-        NewObject<UTextureRenderTarget2D>(this);
+    UTextureRenderTarget2D* RT = NewObject<UTextureRenderTarget2D>(this);
 
     if (!RT)
     {
         return nullptr;
     }
 
-    RT->InitAutoFormat(
-        1024,
-        1024);
+    RT->InitAutoFormat(1024, 1024);
 
-    RT->ClearColor =
-        FLinearColor::Red;
+    RT->ClearColor = FLinearColor::Red;
 
     RT->UpdateResourceImmediate(true);
 
