@@ -99,17 +99,11 @@ public:
     UPROPERTY(EditAnywhere, Category = "Portal")
     UTextureRenderTarget2D* RT_PortalB;
 
-
-    // ========================================
     // Preview Class
-    // ========================================
-
-    // Preview Class
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Portal Preview", meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Portal Preview")
     TObjectPtr<AActor> ValidPreviewActor = nullptr;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Portal Preview", meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Portal Preview")
     TObjectPtr<AActor> InvalidPreviewActor = nullptr;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Portal Preview")

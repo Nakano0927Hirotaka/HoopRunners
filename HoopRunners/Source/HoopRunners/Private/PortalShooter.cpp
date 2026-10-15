@@ -53,17 +53,14 @@ void APortalShooter::Tick(float DeltaTime)
         return;
     }
 
-    APawn* OwnerPawn =
-        Cast<APawn>(GetOwner());
+    APawn* OwnerPawn = Cast<APawn>(GetOwner());
 
     if (!OwnerPawn)
     {
         return;
     }
 
-    APlayerController* PC =
-        Cast<APlayerController>(
-            OwnerPawn->GetController());
+    APlayerController* PC = Cast<APlayerController>(OwnerPawn->GetController());
 
     if (!PC)
     {
@@ -185,8 +182,16 @@ bool APortalShooter::CanPlacePortal(
 
     if (!bHit)
     {
+        UE_LOG(LogTemp, Warning, TEXT("[Portal] NG: 前方にヒットなし"));
         return false;
     }
+
+    UE_LOG(
+        LogTemp, Warning,
+        TEXT("[Portal] Hit Actor: %s / Normal: %s"),
+        *GetNameSafe(Hit.GetActor()),
+        *Hit.ImpactNormal.ToString()
+    );
 
 
     // ========================================================
@@ -195,6 +200,7 @@ bool APortalShooter::CanPlacePortal(
 
     if (Hit.GetActor() && Hit.GetActor()->ActorHasTag(TEXT("NoPortal")))
     {
+        UE_LOG(LogTemp, Warning, TEXT("[Portal] NG: NoPortalタグ"));
         return false;
     }
 
@@ -215,6 +221,16 @@ bool APortalShooter::CanPlacePortal(
     FVector CheckPos = HitPoint - Normal * CellSize;
 
     FHitResult CheckHit;
+
+    UE_LOG(
+        LogTemp,
+        Warning,
+        TEXT("[Portal] Hit=%s / CurrentA=%s / CurrentB=%s / Preview=%s"),
+        *GetNameSafe(Hit.GetActor()),
+        *GetNameSafe(CurrentPortalA),
+        *GetNameSafe(CurrentPortalB),
+        *GetNameSafe(CurrentPreviewActor)
+    );
 
     bool bHasWall = World->LineTraceSingleByChannel(
             CheckHit,
@@ -483,7 +499,6 @@ void APortalShooter::StartPortalPreview()
     {
         return;
     }
-
     // 青いプレビューを生成
     if (!IsValid(ValidPreviewActor) && ValidPreviewClass)
     {
@@ -513,6 +528,20 @@ void APortalShooter::StartPortalPreview()
             InvalidPreviewActor->SetActorHiddenInGame(true);
         }
     }
+
+
+    if (IsValid(ValidPreviewActor))
+    {
+        ValidPreviewActor->SetActorHiddenInGame(true);
+        ValidPreviewActor->SetActorEnableCollision(false);
+    }
+
+    if (IsValid(InvalidPreviewActor))
+    {
+        InvalidPreviewActor->SetActorHiddenInGame(true);
+        InvalidPreviewActor->SetActorEnableCollision(false);
+    }
+
 
     bPreviewing = true;
 
@@ -594,25 +623,32 @@ void APortalShooter::UpdatePreview(
     FVector End = Start + Forward * 10000.f;
 
     FCollisionQueryParams QueryParams;
-
     QueryParams.AddIgnoredActor(this);
 
-
-    APawn* OwnerPawn = Cast<APawn>(GetOwner());
-
-    if (OwnerPawn)
+    if (APawn* OwnerPawn = Cast<APawn>(GetOwner()))
     {
         QueryParams.AddIgnoredActor(OwnerPawn);
     }
 
-    if (CurrentPortalA)
+    if (IsValid(CurrentPortalA))
     {
         QueryParams.AddIgnoredActor(CurrentPortalA);
     }
 
-    if (CurrentPortalB)
+    if (IsValid(CurrentPortalB))
     {
         QueryParams.AddIgnoredActor(CurrentPortalB);
+    }
+
+
+    if (IsValid(ValidPreviewActor.Get()))
+    {
+        QueryParams.AddIgnoredActor(ValidPreviewActor.Get());
+    }
+
+    if (IsValid(InvalidPreviewActor.Get()))
+    {
+        QueryParams.AddIgnoredActor(InvalidPreviewActor.Get());
     }
 
     FCollisionQueryParams TraceParams;
@@ -622,17 +658,6 @@ void APortalShooter::UpdatePreview(
     if (APawn* Pawn = Cast<APawn>(GetOwner()))
     {
         TraceParams.AddIgnoredActor(Pawn);
-    }
-
-    // プレビューActor自身を無視
-    if (IsValid(ValidPreviewActor.Get()))
-    {
-        TraceParams.AddIgnoredActor(ValidPreviewActor.Get());
-    }
-
-    if (IsValid(InvalidPreviewActor.Get()))
-    {
-        TraceParams.AddIgnoredActor(InvalidPreviewActor.Get());
     }
 
     FHitResult Hit;
@@ -666,20 +691,33 @@ void APortalShooter::UpdatePreview(
     // ========================================================
     // プレビュー位置
     // ========================================================
-    FVector PreviewLocation =
-        Hit.ImpactPoint + Hit.ImpactNormal.GetSafeNormal() * 2.f;
 
-    FVector Normal = Hit.ImpactNormal.GetSafeNormal();
+    FVector PreviewLocation;
+    FRotator PreviewRotation;
 
-    FVector Up = FVector::UpVector;
-
-    if (FMath::Abs(FVector::DotProduct(Normal, Up)) > 0.99f)
+    // 設置可能なら、実際の設置位置をそのまま使用する
+    if (bCanPlacePortal)
     {
-        Up = FVector::ForwardVector;
+        PreviewLocation = FrontLocation;
+        PreviewRotation = FrontRotation;
     }
+    else
+    {
+        // 設置不可の場合は、照準が当たった壁面に赤いプレビューを表示
+        FVector Normal = Hit.ImpactNormal.GetSafeNormal();
 
-    FRotator PreviewRotation = FRotationMatrix::MakeFromXZ(Normal, Up).Rotator();
+        PreviewLocation = Hit.ImpactPoint + Normal * 2.0f;
 
+        FVector Up = FVector::UpVector;
+
+        if (FMath::Abs(FVector::DotProduct(Normal, Up)) > 0.99f)
+        {
+            Up = FVector::ForwardVector;
+        }
+
+        PreviewRotation =
+            FRotationMatrix::MakeFromXZ(Normal, Up).Rotator();
+    }
 
     // ========================================================
     // 青 / 赤の切り替え
@@ -687,16 +725,16 @@ void APortalShooter::UpdatePreview(
 
     UpdatePreviewColor();
 
-
     // ========================================================
-    // 現在のプレビューを移動
+    // プレビューを移動
     // ========================================================
 
-    if (CurrentPreviewActor)
+    if (IsValid(CurrentPreviewActor))
     {
-        CurrentPreviewActor->SetActorLocation(PreviewLocation);
-
-        CurrentPreviewActor->SetActorRotation(PreviewRotation);
+        CurrentPreviewActor->SetActorLocationAndRotation(
+            PreviewLocation,
+            PreviewRotation
+        );
     }
 }
 
