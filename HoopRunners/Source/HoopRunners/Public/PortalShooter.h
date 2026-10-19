@@ -36,6 +36,17 @@ public:
 
     void FireInternal(FVector Start, FVector Forward);
 
+    // 残りクールタイムを取得
+    UFUNCTION(BlueprintPure, Category = "Portal")
+    float GetRemainingCooldown() const;
+
+    // ポータルを設置できるか
+    UFUNCTION(BlueprintPure, Category = "Portal")
+    bool IsPortalReady() const;
+
+    // クールタイムの進行率（0.0～1.0）
+    UFUNCTION(BlueprintPure, Category = "Portal|Cooldown")
+    float GetCooldownProgress() const;
 
     // ========================================
     // 設置可能判定
@@ -81,6 +92,10 @@ public:
     UPROPERTY(EditAnywhere, Category = "Portal")
     TSubclassOf<APortal> PortalClass;
 
+    // ポータルのクールタイム
+    UPROPERTY(EditAnywhere, Category = "Portal")
+    float PortalCooldown = 3.0f;
+
     // 壁の厚さ
     UPROPERTY(EditAnywhere, Category = "Portal")
     float CellSize = 100.f;
@@ -100,17 +115,19 @@ public:
     UTextureRenderTarget2D* RT_PortalB;
 
     // Preview Class
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Portal Preview")
-    TObjectPtr<AActor> ValidPreviewActor = nullptr;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Portal Preview")
-    TObjectPtr<AActor> InvalidPreviewActor = nullptr;
-
+    // 表示するプレビューのクラス
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Portal Preview")
     TSubclassOf<AActor> ValidPreviewClass;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Portal Preview")
     TSubclassOf<AActor> InvalidPreviewClass;
+
+    // 実際に生成されたプレビューアクター
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Portal Preview")
+    TObjectPtr<AActor> ValidPreviewActor = nullptr;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Portal Preview")
+    TObjectPtr<AActor> InvalidPreviewActor = nullptr;
 
 
 private:
@@ -125,6 +142,10 @@ private:
     UPROPERTY()
     APortal* CurrentPortalB;
 
+    // ========================================
+    // 次に設置可能になるゲーム内時刻
+    // ========================================
+    float nextPortalTime = 0.0f;
 
     // ========================================
     // プレビューActor

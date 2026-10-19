@@ -313,8 +313,6 @@ bool APortalShooter::CanPlacePortal(
 
 
 // ============================================================
-// FireInternal
-//
 // 実際にポータルを生成する。
 // ============================================================
 void APortalShooter::FireInternal(
@@ -324,6 +322,13 @@ void APortalShooter::FireInternal(
 
     if (!World || !PortalClass)
     {
+        return;
+    }
+
+    // クールタイム中は設置できない
+    if (World && World->GetTimeSeconds() < nextPortalTime)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Portal is cooling down"));
         return;
     }
 
@@ -484,6 +489,9 @@ void APortalShooter::FireInternal(
     CurrentPortalB = B;
 
 
+    // 設置成功後にクールタイムを開始
+    nextPortalTime = World->GetTimeSeconds() + PortalCooldown;
+
     UE_LOG( LogTemp, Warning, TEXT("Portal Created"));
 }
 
@@ -492,7 +500,6 @@ void APortalShooter::FireInternal(
 // StartPortalPreview
 // 右クリック押下
 // ============================================================
-
 void APortalShooter::StartPortalPreview()
 {
     if (!GetWorld())
@@ -532,16 +539,21 @@ void APortalShooter::StartPortalPreview()
 
     if (IsValid(ValidPreviewActor))
     {
-        ValidPreviewActor->SetActorHiddenInGame(true);
+        // 当たり判定を無効化
         ValidPreviewActor->SetActorEnableCollision(false);
+
+        // 見た目だけ表示する
+        ValidPreviewActor->SetActorHiddenInGame(true);
     }
 
     if (IsValid(InvalidPreviewActor))
     {
-        InvalidPreviewActor->SetActorHiddenInGame(true);
+        // 当たり判定を無効化
         InvalidPreviewActor->SetActorEnableCollision(false);
-    }
 
+        // 見た目だけ表示する
+        InvalidPreviewActor->SetActorHiddenInGame(true);
+    }
 
     bPreviewing = true;
 
@@ -603,8 +615,7 @@ void APortalShooter::UpdatePreview(
     FVector BackLocation;
     FRotator BackRotation;
 
-    bCanPlacePortal =
-        CanPlacePortal(Start, Forward, FrontLocation, FrontRotation, BackLocation, BackRotation);
+    bCanPlacePortal = CanPlacePortal(Start, Forward, FrontLocation, FrontRotation, BackLocation, BackRotation);
 
 
     // ========================================================
@@ -651,6 +662,7 @@ void APortalShooter::UpdatePreview(
         QueryParams.AddIgnoredActor(InvalidPreviewActor.Get());
     }
 
+
     FCollisionQueryParams TraceParams;
     TraceParams.AddIgnoredActor(this);
 
@@ -660,11 +672,32 @@ void APortalShooter::UpdatePreview(
         TraceParams.AddIgnoredActor(Pawn);
     }
 
+    // 設置済みポータルを無視
+    if (IsValid(CurrentPortalA))
+    {
+        TraceParams.AddIgnoredActor(CurrentPortalA);
+    }
+
+    if (IsValid(CurrentPortalB))
+    {
+        TraceParams.AddIgnoredActor(CurrentPortalB);
+    }
+
+    // プレビューActorを無視
+    if (IsValid(ValidPreviewActor.Get()))
+    {
+        TraceParams.AddIgnoredActor(ValidPreviewActor.Get());
+    }
+
+    if (IsValid(InvalidPreviewActor.Get()))
+    {
+        TraceParams.AddIgnoredActor(InvalidPreviewActor.Get());
+    }
+
     FHitResult Hit;
 
-    bool bHit = World->LineTraceSingleByChannel(
+    const bool bHit = World->LineTraceSingleByChannel(
         Hit, Start, End, ECC_Visibility, TraceParams);
-
 
     // ========================================================
     // 何も当たらない
@@ -689,8 +722,8 @@ void APortalShooter::UpdatePreview(
 
 
     // ========================================================
-    // プレビュー位置
-    // ========================================================
+// プレビュー位置
+// ========================================================
 
     FVector PreviewLocation;
     FRotator PreviewRotation;
@@ -706,7 +739,7 @@ void APortalShooter::UpdatePreview(
         // 設置不可の場合は、照準が当たった壁面に赤いプレビューを表示
         FVector Normal = Hit.ImpactNormal.GetSafeNormal();
 
-        PreviewLocation = Hit.ImpactPoint + Normal * 2.0f;
+        PreviewLocation = Hit.ImpactPoint + Normal * PortalOffset;
 
         FVector Up = FVector::UpVector;
 
@@ -781,11 +814,45 @@ void APortalShooter::UpdatePreviewColor()
     }
 }
 
+// ============================================================
+// クールタイム
+// ============================================================
+float APortalShooter::GetRemainingCooldown() const
+{
+    UWorld* World = GetWorld();
+
+    if (!World)
+    {
+        return 0.0f;
+    }
+
+    return FMath::Max(0.0f, nextPortalTime - World->GetTimeSeconds());
+}
+
+bool APortalShooter::IsPortalReady() const
+{
+    return GetRemainingCooldown() <= 0.0f;
+}
+
+float APortalShooter::GetCooldownProgress() const
+{
+    if (PortalCooldown <= 0.0f)
+    {
+        return 1.0f;
+    }
+
+    const float Remaining = GetRemainingCooldown();
+
+    return FMath::Clamp(
+        1.0f - (Remaining / PortalCooldown),
+        0.0f,
+        1.0f
+    );
+}
 
 // ============================================================
 // IsPortalPlaceable
 // ============================================================
-
 bool APortalShooter::IsPortalPlaceable() const
 {
     return bCanPlacePortal;
@@ -795,7 +862,6 @@ bool APortalShooter::IsPortalPlaceable() const
 // ============================================================
 // CreatePortalRT
 // ============================================================
-
 UTextureRenderTarget2D*
 APortalShooter::CreatePortalRT()
 {
