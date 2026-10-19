@@ -1,0 +1,13 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "c:\\users\\ydauser01\\documents\\_git\\hooprunner\\hooprunners\\intermediate\\build\\win64\\unrealeditor\\inc\\hooprunners\\uht\\hooprunners.init.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "c:\\users\\ydauser01\\documents\\_git\\hooprunner\\hooprunners\\intermediate\\build\\win64\\x64\\hooprunnerseditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.valexpapi.cpp20.inclorderunreal5_3.h.pch",
+        "Includes": [
+            "c:\\users\\ydauser01\\documents\\_git\\hooprunner\\hooprunners\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\hooprunners\\definitions.hooprunners.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}
