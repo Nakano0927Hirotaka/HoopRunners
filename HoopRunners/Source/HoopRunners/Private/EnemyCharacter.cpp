@@ -10,12 +10,15 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 AEnemyCharacter::AEnemyCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
+	SetReplicateMovement(true);
 
 	//AI Perception
 	AIPerception = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AIPerception"));
@@ -55,6 +58,13 @@ AEnemyCharacter::AEnemyCharacter()
 
 }
 
+void AEnemyCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AEnemyCharacter, CurrentState);
+	DOREPLIFETIME(AEnemyCharacter, bIsStunned);
+}
+
 // Called when the game starts or when spawned
 void AEnemyCharacter::BeginPlay()
 {
@@ -72,6 +82,11 @@ void AEnemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// 敵AIの判断はサーバーだけで実行し、移動と状態を複製する。
+	if (!HasAuthority())
+	{
+		return;
+	}
 	if (bIsStunned)
 	{
 		return;
@@ -253,7 +268,7 @@ void AEnemyCharacter::UpdateState()
 //捕獲
 void AEnemyCharacter::CapturePlayer(ACharacter* Player)
 {
-	if (!Player) return;
+	if (!HasAuthority() || bIsStunned || !Player) return;
 
 	Player->DisableInput(nullptr);
 	Player->SetActorLocation(CageLocation);
@@ -263,28 +278,24 @@ void AEnemyCharacter::CapturePlayer(ACharacter* Player)
 
 void AEnemyCharacter::ApplyEMP(float StunDuration)
 {
-	//既にスタン中なら無視
-	if (bIsStunned)
+	// EMP処理はサーバーで一度だけ行い、敵の状態と移動停止を同期する。
+	if (!HasAuthority() || StunDuration <= 0.0f || !GetWorld())
 	{
 		return;
 	}
 
 	bIsStunned = true;
+	CurrentTarget = nullptr;
+	CurrentState = EEnemyState::Stunned;
+	bHasPatrolTarget = false;
 
-	//移動停止
-	AAIController* AIController = Cast<AAIController>(GetController());
-
-	if (AIController)
+	if (AAIController* AIController = Cast<AAIController>(GetController()))
 	{
 		AIController->StopMovement();
 	}
+	GetCharacterMovement()->StopMovementImmediately();
+	GetCharacterMovement()->DisableMovement();
 
-	//Chase解除
-	CurrentTarget = nullptr;
-	CurrentState = EEnemyState::Patrol;
-	bHasPatrolTarget = false;
-
-	//4秒後解除
 	GetWorldTimerManager().SetTimer(
 		StunTimerHandle,
 		this,
@@ -292,11 +303,21 @@ void AEnemyCharacter::ApplyEMP(float StunDuration)
 		StunDuration,
 		false
 	);
+	ForceNetUpdate();
 }
 
 void AEnemyCharacter::EndStun()
 {
+	if (!HasAuthority())
+	{
+		return;
+	}
+
 	bIsStunned = false;
+	CurrentState = EEnemyState::Patrol;
+	bHasPatrolTarget = false;
+	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	ForceNetUpdate();
 }
 
 //接触判定

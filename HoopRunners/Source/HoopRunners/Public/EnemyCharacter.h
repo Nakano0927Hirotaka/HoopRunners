@@ -16,7 +16,8 @@ enum class EEnemyState : uint8
 	Patrol,
 	Chase,
 	FullChase,
-	Capture
+	Capture,
+	Stunned
 };
 
 UCLASS()
@@ -27,6 +28,7 @@ class HOOPRUNNERS_API AEnemyCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	AEnemyCharacter();
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	bool bHasPatrolTarget;
 
@@ -47,7 +49,7 @@ protected:
 	UAISenseConfig_Sight* SightConfig;
 
 	//現在ステート
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadOnly)
 	EEnemyState CurrentState;
 
 	//現在ターゲット
@@ -72,6 +74,7 @@ protected:
 	float DefaultLoseSightRadius;
 
 	//スタン中か
+	UPROPERTY(Replicated)
 	bool bIsStunned;
 
 	//スタンタイマー
