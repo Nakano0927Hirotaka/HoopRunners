@@ -87,9 +87,9 @@ void APortal::BeginPlay()
     Capture->PrimitiveRenderMode =
         ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
     Capture->HideComponent(PortalMesh);
-    Capture->ShowFlags.Atmosphere = false;
-    Capture->ShowFlags.Fog = false;
-    Capture->ShowFlags.MotionBlur = false;
+    // Capture->ShowFlags.Atmosphere = false;
+    // Capture->ShowFlags.Fog = false;
+    // Capture->ShowFlags.MotionBlur = false;
     Capture->bCaptureEveryFrame = false;
     Capture->bCaptureOnMovement = false;
 
@@ -383,7 +383,6 @@ void APortal::GetLifetimeReplicatedProps(
 }
 
 // ===== ProcessTeleport =====
-
 void APortal::ProcessTeleport()
 {
     if (OverlappingActors.Num() == 0)
