@@ -6,6 +6,8 @@
 #include "Engine/World.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "GameFramework/Pawn.h"
+#include "Net/UnrealNetwork.h"
+#include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -325,13 +327,6 @@ void APortalShooter::FireInternal(
         return;
     }
 
-    // クールタイム中は設置できない
-    if (World && World->GetTimeSeconds() < nextPortalTime)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Portal is cooling down"));
-        return;
-    }
-
     // ========================================================
     // ポータル設置可能判定
     // ========================================================
@@ -489,10 +484,20 @@ void APortalShooter::FireInternal(
     CurrentPortalB = B;
 
 
-    // 設置成功後にクールタイムを開始
-    nextPortalTime = World->GetTimeSeconds() + PortalCooldown;
+    // ポータル生成成功後にクールタイムを開始
+    const float CurrentTime = GetPortalGameTime(World);
+    nextPortalTime = CurrentTime + PortalCooldown;
 
-    UE_LOG( LogTemp, Warning, TEXT("Portal Created"));
+    UE_LOG(
+        LogTemp,
+        Warning,
+        TEXT("[Cooldown] Started: Now=%.2f, Next=%.2f, Duration=%.2f"),
+        CurrentTime,
+        nextPortalTime,
+        PortalCooldown
+    );
+
+    UE_LOG(LogTemp, Warning, TEXT("Portal Created"));
 }
 
 
@@ -826,7 +831,9 @@ float APortalShooter::GetRemainingCooldown() const
         return 0.0f;
     }
 
-    return FMath::Max(0.0f, nextPortalTime - World->GetTimeSeconds());
+    const float CurrentTime = GetPortalGameTime(World);
+
+    return FMath::Max(0.0f, nextPortalTime - CurrentTime);
 }
 
 bool APortalShooter::IsPortalReady() const
@@ -836,18 +843,53 @@ bool APortalShooter::IsPortalReady() const
 
 float APortalShooter::GetCooldownProgress() const
 {
+    UWorld* World = GetWorld();
+
+    if (!World)
+    {
+        return 0.0f;
+    }
+
+    const float Now = GetPortalGameTime(World);
+    const float Remaining =
+        FMath::Max(0.0f, nextPortalTime - Now);
+
     if (PortalCooldown <= 0.0f)
     {
         return 1.0f;
     }
-
-    const float Remaining = GetRemainingCooldown();
 
     return FMath::Clamp(
         1.0f - (Remaining / PortalCooldown),
         0.0f,
         1.0f
     );
+}
+
+void APortalShooter::GetLifetimeReplicatedProps(
+    TArray<FLifetimeProperty>& OutLifetimeProps
+) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(APortalShooter, nextPortalTime);
+}
+
+float APortalShooter::GetPortalGameTime(const UWorld* World)
+{
+    if (!World)
+    {
+        return 0.0f;
+    }
+
+    const AGameStateBase* GameState = World->GetGameState();
+
+    if (GameState)
+    {
+        return GameState->GetServerWorldTimeSeconds();
+    }
+
+    return World->GetTimeSeconds();
 }
 
 // ============================================================

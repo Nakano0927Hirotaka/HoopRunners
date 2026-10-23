@@ -48,19 +48,20 @@ public:
     UFUNCTION(BlueprintPure, Category = "Portal|Cooldown")
     float GetCooldownProgress() const;
 
+    virtual void GetLifetimeReplicatedProps(
+        TArray<FLifetimeProperty>& OutLifetimeProps
+    ) const override;
+
+    static float GetPortalGameTime(const UWorld* World);
+
     // ========================================
     // 設置可能判定
     // ========================================
 
     UFUNCTION(BlueprintCallable, Category = "Portal")
-    bool CanPlacePortal(
-        FVector Start,
-        FVector Forward,
-        FVector& OutFrontLocation,
-        FRotator& OutFrontRotation,
-        FVector& OutBackLocation,
-        FRotator& OutBackRotation);
-
+    bool CanPlacePortal(FVector Start, FVector Forward, 
+        FVector& OutFrontLocation, FRotator& OutFrontRotation, 
+        FVector& OutBackLocation, FRotator& OutBackRotation);
 
     // ========================================
     // プレビュー
@@ -73,15 +74,17 @@ public:
     void StopPortalPreview();
 
     UFUNCTION(BlueprintCallable, Category = "Portal Preview")
-    void UpdatePreview(
-        FVector Start,
-        FVector Forward);
+    void UpdatePreview(FVector Start, FVector Forward);
 
     UFUNCTION(BlueprintPure, Category = "Portal Preview")
     bool IsPortalPlaceable() const;
 
     void UpdatePreviewColor();
 
+    // ========================================
+    // RT
+    // ========================================
+    UTextureRenderTarget2D* CreatePortalRT();
 
 public:
 
@@ -145,6 +148,7 @@ private:
     // ========================================
     // 次に設置可能になるゲーム内時刻
     // ========================================
+    UPROPERTY(Replicated)
     float nextPortalTime = 0.0f;
 
     // ========================================
@@ -162,10 +166,4 @@ private:
 
     bool bCanPlacePortal = false;
 
-
-    // ========================================
-    // RT
-    // ========================================
-
-    UTextureRenderTarget2D* CreatePortalRT();
 };
