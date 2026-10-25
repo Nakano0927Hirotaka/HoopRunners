@@ -19,7 +19,7 @@ PRAGMA_DISABLE_DEPRECATION_WARNINGS
 // ********** Begin Class UInventoryWidget *********************************************************
 HOOPRUNNERS_API UClass* Z_Construct_UClass_UInventoryWidget_NoRegister();
 
-#define FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryWidget_h_17_INCLASS_NO_PURE_DECLS \
+#define FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryWidget_h_17_INCLASS_NO_PURE_DECLS \
 private: \
 	static void StaticRegisterNativesUInventoryWidget(); \
 	friend struct Z_Construct_UClass_UInventoryWidget_Statics; \
@@ -30,7 +30,7 @@ public: \
 	DECLARE_SERIALIZER(UInventoryWidget)
 
 
-#define FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryWidget_h_17_ENHANCED_CONSTRUCTORS \
+#define FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryWidget_h_17_ENHANCED_CONSTRUCTORS \
 	/** Standard constructor, called after all reflected properties have been initialized */ \
 	NO_API UInventoryWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()); \
 	/** Deleted move- and copy-constructors, should never be used */ \
@@ -42,12 +42,12 @@ public: \
 	NO_API virtual ~UInventoryWidget();
 
 
-#define FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryWidget_h_14_PROLOG
-#define FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryWidget_h_17_GENERATED_BODY \
+#define FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryWidget_h_14_PROLOG
+#define FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryWidget_h_17_GENERATED_BODY \
 PRAGMA_DISABLE_DEPRECATION_WARNINGS \
 public: \
-	FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryWidget_h_17_INCLASS_NO_PURE_DECLS \
-	FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryWidget_h_17_ENHANCED_CONSTRUCTORS \
+	FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryWidget_h_17_INCLASS_NO_PURE_DECLS \
+	FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryWidget_h_17_ENHANCED_CONSTRUCTORS \
 private: \
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
@@ -57,6 +57,6 @@ class UInventoryWidget;
 // ********** End Class UInventoryWidget ***********************************************************
 
 #undef CURRENT_FILE_ID
-#define CURRENT_FILE_ID FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryWidget_h
+#define CURRENT_FILE_ID FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryWidget_h
 
 PRAGMA_ENABLE_DEPRECATION_WARNINGS

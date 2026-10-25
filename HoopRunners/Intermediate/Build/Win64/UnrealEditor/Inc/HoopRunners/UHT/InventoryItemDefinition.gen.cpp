@@ -364,7 +364,7 @@ UScriptStruct* Z_Construct_UScriptStruct_FInventoryStack()
 // ********** End ScriptStruct FInventoryStack *****************************************************
 
 // ********** Begin Registration *******************************************************************
-struct Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h__Script_HoopRunners_Statics
+struct Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h__Script_HoopRunners_Statics
 {
 	static constexpr FEnumRegisterCompiledInInfo EnumInfo[] = {
 		{ EInventoryItemUseType_StaticEnum, TEXT("EInventoryItemUseType"), &Z_Registration_Info_UEnum_EInventoryItemUseType, CONSTRUCT_RELOAD_VERSION_INFO(FEnumReloadVersionInfo, 1135634947U) },
@@ -376,10 +376,10 @@ struct Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRunner_HoopR
 		{ Z_Construct_UClass_UInventoryItemDefinition, UInventoryItemDefinition::StaticClass, TEXT("UInventoryItemDefinition"), &Z_Registration_Info_UClass_UInventoryItemDefinition, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(UInventoryItemDefinition), 1853557894U) },
 	};
 };
-static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h__Script_HoopRunners_1721448615(TEXT("/Script/HoopRunners"),
-	Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h__Script_HoopRunners_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h__Script_HoopRunners_Statics::ClassInfo),
-	Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h__Script_HoopRunners_Statics::ScriptStructInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h__Script_HoopRunners_Statics::ScriptStructInfo),
-	Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h__Script_HoopRunners_Statics::EnumInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h__Script_HoopRunners_Statics::EnumInfo));
+static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h__Script_HoopRunners_1721448615(TEXT("/Script/HoopRunners"),
+	Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h__Script_HoopRunners_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h__Script_HoopRunners_Statics::ClassInfo),
+	Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h__Script_HoopRunners_Statics::ScriptStructInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h__Script_HoopRunners_Statics::ScriptStructInfo),
+	Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h__Script_HoopRunners_Statics::EnumInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h__Script_HoopRunners_Statics::EnumInfo));
 // ********** End Registration *********************************************************************
 
 PRAGMA_ENABLE_DEPRECATION_WARNINGS

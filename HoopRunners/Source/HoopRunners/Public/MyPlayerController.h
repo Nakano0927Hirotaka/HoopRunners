@@ -1,6 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/Actor.h"
 #include "MyPlayerController.generated.h"
 
 UCLASS()
@@ -51,4 +52,13 @@ protected:
 
     UFUNCTION(BlueprintImplementableEvent, Category = "Lobby")
     void OnPlayerCountUpdated(int32 Current, int32 Max);
+
+public:
+    // タイトル画面のWidgetクラス
+    UPROPERTY(EditDefaultsOnly, Category = "UI")
+    TSubclassOf<UUserWidget> TitleWidgetClass;
+
+    // タイトル画面用の固定カメラActorクラス
+    UPROPERTY(EditDefaultsOnly, Category = "Title")
+    TSubclassOf<AActor> TitleCameraClass;
 };

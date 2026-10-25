@@ -18,6 +18,64 @@ void AMyPlayerController::JoinHost(const FString& IPAddress)
 void AMyPlayerController::BeginPlay()
 {
     Super::BeginPlay();
+
+    // ローカルプレイヤーだけがUIを表示する
+    if (!IsLocalPlayerController())
+    {
+        return;
+    }
+
+    // 現在のレベル名を取得する
+    const FString LevelName =
+        UGameplayStatics::GetCurrentLevelName(this, true);
+
+    // タイトル画面の場合
+    if (LevelName == TEXT("TitleMap"))
+    {
+        // 固定カメラを設定する
+        if (TitleCameraClass)
+        {
+            AActor* CameraActor =
+                UGameplayStatics::GetActorOfClass(
+                    this,
+                    TitleCameraClass
+                );
+
+            if (CameraActor)
+            {
+                SetViewTarget(CameraActor);
+            }
+            else
+            {
+                UE_LOG(
+                    LogTemp,
+                    Error,
+                    TEXT("Title Camera not found")
+                );
+            }
+        }
+
+        // タイトルUIを表示する
+        if (TitleWidgetClass)
+        {
+            UUserWidget* Widget =
+                CreateWidget<UUserWidget>(
+                    this,
+                    TitleWidgetClass
+                );
+
+            if (Widget)
+            {
+                Widget->AddToViewport();
+            }
+        }
+
+        // マウス操作だけを有効にする
+        bShowMouseCursor = true;
+
+        FInputModeUIOnly InputMode;
+        SetInputMode(InputMode);
+    }
 }
 
 void AMyPlayerController::UpdatePlayers_Implementation(int32 Current, int32 Max)

@@ -19,16 +19,16 @@ PRAGMA_DISABLE_DEPRECATION_WARNINGS
 enum class EEnemyAIState : uint8;
 
 // ********** Begin Class AEnemyAICharacter ********************************************************
-#define FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h_21_RPC_WRAPPERS_NO_PURE_DECLS \
+#define FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h_21_RPC_WRAPPERS_NO_PURE_DECLS \
 	DECLARE_FUNCTION(execOnRep_CurrentState); \
 	DECLARE_FUNCTION(execApplyEMPStun); \
 	DECLARE_FUNCTION(execGetAIState);
 
 
-#define FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h_21_CALLBACK_WRAPPERS
+#define FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h_21_CALLBACK_WRAPPERS
 HOOPRUNNERS_API UClass* Z_Construct_UClass_AEnemyAICharacter_NoRegister();
 
-#define FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h_21_INCLASS_NO_PURE_DECLS \
+#define FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h_21_INCLASS_NO_PURE_DECLS \
 private: \
 	static void StaticRegisterNativesAEnemyAICharacter(); \
 	friend struct Z_Construct_UClass_AEnemyAICharacter_Statics; \
@@ -45,7 +45,7 @@ public: \
 	DECLARE_VALIDATE_GENERATED_REP_ENUMS(NO_API)
 
 
-#define FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h_21_ENHANCED_CONSTRUCTORS \
+#define FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h_21_ENHANCED_CONSTRUCTORS \
 	/** Deleted move- and copy-constructors, should never be used */ \
 	AEnemyAICharacter(AEnemyAICharacter&&) = delete; \
 	AEnemyAICharacter(const AEnemyAICharacter&) = delete; \
@@ -55,14 +55,14 @@ public: \
 	NO_API virtual ~AEnemyAICharacter();
 
 
-#define FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h_18_PROLOG
-#define FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h_21_GENERATED_BODY \
+#define FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h_18_PROLOG
+#define FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h_21_GENERATED_BODY \
 PRAGMA_DISABLE_DEPRECATION_WARNINGS \
 public: \
-	FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h_21_RPC_WRAPPERS_NO_PURE_DECLS \
-	FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h_21_CALLBACK_WRAPPERS \
-	FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h_21_INCLASS_NO_PURE_DECLS \
-	FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h_21_ENHANCED_CONSTRUCTORS \
+	FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h_21_RPC_WRAPPERS_NO_PURE_DECLS \
+	FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h_21_CALLBACK_WRAPPERS \
+	FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h_21_INCLASS_NO_PURE_DECLS \
+	FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h_21_ENHANCED_CONSTRUCTORS \
 private: \
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
@@ -72,7 +72,7 @@ class AEnemyAICharacter;
 // ********** End Class AEnemyAICharacter **********************************************************
 
 #undef CURRENT_FILE_ID
-#define CURRENT_FILE_ID FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h
+#define CURRENT_FILE_ID FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h
 
 // ********** Begin Enum EEnemyAIState *************************************************************
 #define FOREACH_ENUM_EENEMYAISTATE(op) \
