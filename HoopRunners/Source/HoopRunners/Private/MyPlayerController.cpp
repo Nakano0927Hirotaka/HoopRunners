@@ -80,14 +80,13 @@ void AMyPlayerController::BeginPlay()
 
 void AMyPlayerController::UpdatePlayers_Implementation(int32 Current, int32 Max)
 {
-    UE_LOG(LogTemp, Warning, TEXT("UpdatePlayers_Implementation called: %d/%d"), Current, Max);
-    
-    UE_LOG(LogTemp, Warning,
-        TEXT("UpdatePlayers called PC=%s Local=%d Current=%d Max=%d"),
-        *GetName(),
-        IsLocalPlayerController(),
+    UE_LOG(
+        LogTemp,
+        Warning,
+        TEXT("UpdatePlayers_Implementation called: %d/%d"),
         Current,
-        Max);
+        Max
+    );
 
     OnPlayerCountUpdated(Current, Max);
 }
@@ -148,4 +147,23 @@ void AMyPlayerController::RequestPlayerCount_Implementation()
     {
         UpdatePlayers(LobbyMode->GetCurrentPlayerCount(), LobbyMode->MaxPlayers);
     }
+}
+
+void AMyPlayerController::RequestStartGame_Implementation()
+{
+    // サーバー上で実行されていることを確認
+    if (!HasAuthority()) return;
+
+    // ホスト以外からの開始要求は拒否する
+    if (!IsLocalController()) return;
+
+    UE_LOG(LogTemp, Warning, TEXT("RequestStartGame: Received on server"));
+
+    // サーバー側のGameModeを取得
+    ALobbyMode* LobbyMode = Cast<ALobbyMode>(UGameplayStatics::GetGameMode(this));
+
+    if (!LobbyMode) return;
+
+    // ゲーム開始処理を実行
+    LobbyMode->StartGame();
 }

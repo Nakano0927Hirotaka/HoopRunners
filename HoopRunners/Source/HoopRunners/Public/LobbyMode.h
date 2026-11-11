@@ -32,7 +32,9 @@ public:
     void NotifyGameClear();
 
 private:
+    virtual void Logout(AController* Exiting) override;
+
     int32 CurrentPlayerCount = 0;
 
-    virtual void Logout(AController* Exiting) override;
+    bool bIsStartingGame = false;
 };

@@ -188,12 +188,12 @@ bool APortalShooter::CanPlacePortal(
         return false;
     }
 
-    UE_LOG(
+    /*UE_LOG(
         LogTemp, Warning,
         TEXT("[Portal] Hit Actor: %s / Normal: %s"),
         *GetNameSafe(Hit.GetActor()),
         *Hit.ImpactNormal.ToString()
-    );
+    );*/
 
 
     // ========================================================
@@ -224,7 +224,7 @@ bool APortalShooter::CanPlacePortal(
 
     FHitResult CheckHit;
 
-    UE_LOG(
+    /*UE_LOG(
         LogTemp,
         Warning,
         TEXT("[Portal] Hit=%s / CurrentA=%s / CurrentB=%s / Preview=%s"),
@@ -232,7 +232,7 @@ bool APortalShooter::CanPlacePortal(
         *GetNameSafe(CurrentPortalA),
         *GetNameSafe(CurrentPortalB),
         *GetNameSafe(CurrentPreviewActor)
-    );
+    );*/
 
     bool bHasWall = World->LineTraceSingleByChannel(
             CheckHit,
@@ -487,17 +487,6 @@ void APortalShooter::FireInternal(
     // ポータル生成成功後にクールタイムを開始
     const float CurrentTime = GetPortalGameTime(World);
     nextPortalTime = CurrentTime + PortalCooldown;
-
-    UE_LOG(
-        LogTemp,
-        Warning,
-        TEXT("[Cooldown] Started: Now=%.2f, Next=%.2f, Duration=%.2f"),
-        CurrentTime,
-        nextPortalTime,
-        PortalCooldown
-    );
-
-    UE_LOG(LogTemp, Warning, TEXT("Portal Created"));
 }
 
 

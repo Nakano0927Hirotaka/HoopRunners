@@ -43,16 +43,20 @@ public:
     UFUNCTION(Server, Reliable)
     void RequestPlayerCount();
 
+    // ホストからゲーム開始を要求する
+    UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Network")
+    void RequestStartGame();
+
+
+    UFUNCTION(BlueprintImplementableEvent, Category = "Lobby")
+    void OnPlayerCountUpdated(int32 Current, int32 Max);
+
 protected:
     UPROPERTY(EditDefaultsOnly, Category = "UI")
     TSubclassOf<UUserWidget> GameOverWidgetClass;
 
     UPROPERTY(EditDefaultsOnly, Category = "UI")
     TSubclassOf<UUserWidget> GameClearWidgetClass;
-
-    UFUNCTION(BlueprintImplementableEvent, Category = "Lobby")
-    void OnPlayerCountUpdated(int32 Current, int32 Max);
-
 public:
     // タイトル画面のWidgetクラス
     UPROPERTY(EditDefaultsOnly, Category = "UI")
