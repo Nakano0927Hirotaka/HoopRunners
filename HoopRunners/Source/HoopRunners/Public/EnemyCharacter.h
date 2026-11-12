@@ -16,8 +16,7 @@ enum class EEnemyState : uint8
 	Patrol,
 	Chase,
 	FullChase,
-	Capture,
-	Stunned
+	Capture
 };
 
 UCLASS()
@@ -26,9 +25,8 @@ class HOOPRUNNERS_API AEnemyCharacter : public ACharacter
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
+	// このキャラクターのプロパティのデフォルト値を設定
 	AEnemyCharacter();
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	bool bHasPatrolTarget;
 
@@ -41,7 +39,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	//AI Perception
+	//AI知覚（索敵）関連
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UAIPerceptionComponent* AIPerception;
 
@@ -49,16 +47,20 @@ protected:
 	UAISenseConfig_Sight* SightConfig;
 
 	//現在ステート
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	EEnemyState CurrentState;
 
 	//現在ターゲット
 	UPROPERTY()
 	AActor* CurrentTarget;
 
-	//檻座標
+	//檻座標（CageActor未設定時のフォールバック用）
 	UPROPERTY(EditAnywhere, Category = "Capture")
 	FVector CageLocation;
+
+	//檻のActor。設定されていればこちらの座標を優先して使用する
+	UPROPERTY(EditAnywhere, Category = "Capture")
+	AActor* CageActor;
 
 	//宝石の数
 	UPROPERTY(EditAnywhere)
@@ -74,7 +76,6 @@ protected:
 	float DefaultLoseSightRadius;
 
 	//スタン中か
-	UPROPERTY(Replicated)
 	bool bIsStunned;
 
 	//スタンタイマー
@@ -118,7 +119,7 @@ protected:
 		const FHitResult& SweepResult
 	);
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
