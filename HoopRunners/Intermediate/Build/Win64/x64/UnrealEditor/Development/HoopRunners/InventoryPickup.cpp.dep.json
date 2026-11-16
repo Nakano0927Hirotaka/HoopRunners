@@ -1,0 +1,27 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "c:\\users\\ydauser01\\documents\\_git\\hooprunner\\hooprunners\\source\\hooprunners\\private\\inventorypickup.cpp",
+        "ProvidedModule": "",
+        "PCH": "c:\\users\\ydauser01\\documents\\_git\\hooprunner\\hooprunners\\intermediate\\build\\win64\\x64\\hooprunnerseditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.valexpapi.cpp20.inclorderunreal5_3.h.pch",
+        "Includes": [
+            "c:\\users\\ydauser01\\documents\\_git\\hooprunner\\hooprunners\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\hooprunners\\definitions.hooprunners.h",
+            "c:\\users\\ydauser01\\documents\\_git\\hooprunner\\hooprunners\\source\\hooprunners\\public\\inventorypickup.h",
+            "c:\\users\\ydauser01\\documents\\_git\\hooprunner\\hooprunners\\source\\hooprunners\\public\\inventoryitemdefinition.h",
+            "c:\\users\\ydauser01\\documents\\_git\\hooprunner\\hooprunners\\intermediate\\build\\win64\\unrealeditor\\inc\\hooprunners\\uht\\inventoryitemdefinition.generated.h",
+            "c:\\users\\ydauser01\\documents\\_git\\hooprunner\\hooprunners\\intermediate\\build\\win64\\unrealeditor\\inc\\hooprunners\\uht\\inventorypickup.generated.h",
+            "c:\\program files\\epic games\\ue_5.6\\engine\\source\\runtime\\engine\\classes\\components\\capsulecomponent.h",
+            "c:\\program files\\epic games\\ue_5.6\\engine\\source\\runtime\\engine\\classes\\components\\shapecomponent.h",
+            "c:\\program files\\epic games\\ue_5.6\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\shapecomponent.generated.h",
+            "c:\\program files\\epic games\\ue_5.6\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\capsulecomponent.generated.h",
+            "c:\\program files\\epic games\\ue_5.6\\engine\\source\\runtime\\engine\\public\\net\\unrealnetwork.h",
+            "c:\\program files\\epic games\\ue_5.6\\engine\\source\\runtime\\net\\core\\public\\net\\core\\propertyconditions\\propertyconditions.h",
+            "c:\\users\\ydauser01\\documents\\_git\\hooprunner\\hooprunners\\source\\hooprunners\\public\\inventorycomponent.h",
+            "c:\\users\\ydauser01\\documents\\_git\\hooprunner\\hooprunners\\intermediate\\build\\win64\\unrealeditor\\inc\\hooprunners\\uht\\inventorycomponent.generated.h",
+            "c:\\program files\\epic games\\ue_5.6\\engine\\source\\runtime\\engine\\classes\\components\\spherecomponent.h",
+            "c:\\program files\\epic games\\ue_5.6\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\spherecomponent.generated.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}
