@@ -9,11 +9,46 @@ ALobbyMode::ALobbyMode()
     DefaultPawnClass = nullptr;
 }
 
+void ALobbyMode::PreLogin(
+    const FString& Options,
+    const FString& Address,
+    const FUniqueNetIdRepl& UniqueId,
+    FString& ErrorMessage)
+{
+    // UE標準の接続チェック
+    Super::PreLogin(Options, Address, UniqueId, ErrorMessage);
+
+    if (!ErrorMessage.IsEmpty())
+    {
+        return;
+    }
+
+    // ゲーム開始後は新規参加・再接続を禁止
+    if (bIsStartingGame)
+    {
+        ErrorMessage = TEXT("Game already started.");
+
+        UE_LOG(
+            LogTemp,
+            Warning,
+            TEXT("PreLogin: Rejected. Game already started.")
+        );
+
+        return;
+    }
+
+    UE_LOG(
+        LogTemp,
+        Warning,
+        TEXT("PreLogin: Connection allowed.")
+    );
+}
+
 void ALobbyMode::PostLogin(APlayerController* NewPlayer)
 {
     Super::PostLogin(NewPlayer);
 
-    // サーバー側で参加人数を更新
+    // サーバー側の参加人数を更新
     CurrentPlayerCount = GetNumPlayers();
 
     UE_LOG(
@@ -23,11 +58,9 @@ void ALobbyMode::PostLogin(APlayerController* NewPlayer)
         CurrentPlayerCount
     );
 
-    // 接続中の全プレイヤーに最新人数を通知
+    // 接続中の全プレイヤーに人数を通知
     for (FConstPlayerControllerIterator It =
-        GetWorld()->GetPlayerControllerIterator();
-        It;
-        ++It)
+        GetWorld()->GetPlayerControllerIterator(); It; ++It)
     {
         AMyPlayerController* PC =
             Cast<AMyPlayerController>(It->Get());
@@ -96,18 +129,6 @@ void ALobbyMode::StartGame()
         return;
     }
 
-    UE_LOG(LogTemp, Warning,
-        TEXT("StartGame: Current map = %s"),
-        *World->GetMapName());
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("StartGame: Players = %d/%d"),
-        CurrentPlayerCount, MaxPlayers);
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("StartGame: GameMapName = %s"),
-        *GameMapName);
-
     // 人数確認
     if (CurrentPlayerCount < MaxPlayers)
     {
@@ -124,12 +145,10 @@ void ALobbyMode::StartGame()
         return;
     }
 
-
-    // ここから開始処理中にする
+    // ここで初めて参加を禁止
     bIsStartingGame = true;
 
     const bool bTravelStarted = World->ServerTravel(GameMapName, true);
-
 
     // 遷移開始に失敗した場合は再試行可能にする
     UE_LOG(LogTemp, Warning,
@@ -139,14 +158,6 @@ void ALobbyMode::StartGame()
     if (!bTravelStarted)
     {
         bIsStartingGame = false;
-
-        UE_LOG(LogTemp, Error,
-            TEXT("StartGame: Travel failed. Resetting flag."));
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("StartGame: Travel request accepted"));
     }
 }
 

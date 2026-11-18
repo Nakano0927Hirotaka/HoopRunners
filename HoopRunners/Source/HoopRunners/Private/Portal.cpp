@@ -197,8 +197,7 @@ void APortal::UpdateCaptureCamera()
 
     // リンク先ポータルの前方にカメラを配置
     FVector CamLocation =
-        GetActorLocation()
-        + GetActorForwardVector() * 10.f;
+        GetActorLocation() + GetActorForwardVector() * 10.f;
 
     // ===== 回転を追加 =====
     // リンク先の正面方向（ForwardVector）をカメラが向く
@@ -349,7 +348,6 @@ void APortal::OnRep_LinkedPortal()
     }
 }
 
-// ===== ApplyDisplayRT =====
 
 void APortal::ApplyDisplayRT()
 {
@@ -365,14 +363,12 @@ void APortal::ApplyDisplayRT()
         *GetNameSafe(DisplayRT));
 }
 
-// ===== SetViewingPlayer =====
 
 void APortal::SetViewingPlayer(APlayerController* PC)
 {
     ViewingPlayer = PC;
 }
 
-// ===== GetLifetimeReplicatedProps =====
 
 void APortal::GetLifetimeReplicatedProps(
     TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -382,69 +378,76 @@ void APortal::GetLifetimeReplicatedProps(
     DOREPLIFETIME(APortal, OwnerPlayer);
 }
 
-// ===== ProcessTeleport =====
+
 void APortal::ProcessTeleport()
 {
-    if (OverlappingActors.Num() == 0)
-    {
-        return;
-    }
+    if (OverlappingActors.Num() == 0) return;
 
     TArray<AActor*> TeleportList;
 
     for (AActor* Actor : OverlappingActors)
     {
-        if (!CanTeleport(Actor))
+        if (!CanTeleport(Actor)) continue;
+
+        FVector CurrPos = Actor->GetActorLocation();
+
+        // カプセルの半径を取得
+        float Radius = 42.f;
+
+        if (ACharacter* Char = Cast<ACharacter>(Actor))
         {
-            continue;
+            Radius = Char->GetCapsuleComponent()->GetScaledCapsuleRadius();
         }
 
-        FVector CurrFront = GetActorFrontPos(Actor);
+        // ポータル面からプレイヤー中心までの距離
+        float CurrentSide = GetSide(CurrPos);
 
-        if (!LastPos.Contains(Actor))
+        // ポータルの開口範囲内か確認
+        bool bInsideBounds = IsInsidePortalBounds(CurrPos);
+
+        UE_LOG(
+            LogTemp,
+            Warning,
+            TEXT("Portal Check: Actor=%s Side=%f Radius=%f Inside=%d"),
+            *Actor->GetName(),
+            CurrentSide,
+            Radius,
+            bInsideBounds
+        );
+
+        // カプセルがポータル面に到達したらワープ
+        if (FMath::Abs(CurrentSide) <= Radius + 5.f && bInsideBounds)
         {
-            LastPos.Add(Actor, CurrFront);
-            continue;
+            UE_LOG(
+                LogTemp,
+                Warning,
+                TEXT("Portal Teleport Triggered: %s"),
+                *Actor->GetName()
+            );
+
+            TeleportList.Add(Actor);
         }
 
-        FVector PrevFront = LastPos[Actor];
-        float PrevSide = GetSide(PrevFront);
-        float CurrSide = GetSide(CurrFront);
-
-        if (PrevSide * CurrSide < 0.f)
-        {
-            if (IsInsidePortalBounds(CurrFront))
-            {
-                TeleportList.Add(Actor);
-            }
-        }
-
-        LastPos[Actor] = CurrFront;
+        LastPos.FindOrAdd(Actor) = CurrPos;
     }
 
+    // テレポート実行
     for (AActor* Actor : TeleportList)
     {
         TeleportActor(Actor);
     }
 }
 
-// ===== GetActorFrontPos =====
-
 FVector APortal::GetActorFrontPos(AActor* Actor) const
 {
-    if (ACharacter* Char = Cast<ACharacter>(Actor))
+    if (!IsValid(Actor))
     {
-        float Radius =
-            Char->GetCapsuleComponent()->GetScaledCapsuleRadius();
-
-        return Actor->GetActorLocation()
-            + Actor->GetActorForwardVector() * Radius;
+        return FVector::ZeroVector;
     }
 
+    // プレイヤーの向きに関係なく中心位置を使用
     return Actor->GetActorLocation();
 }
-
-// ===== GetPlanePos =====
 
 FVector APortal::GetPlanePos() const
 {
@@ -452,16 +455,12 @@ FVector APortal::GetPlanePos() const
         + GetActorForwardVector() * PortalPlaneOffset;
 }
 
-// ===== GetSide =====
-
 float APortal::GetSide(const FVector& Pos) const
 {
     return FVector::DotProduct(
         Pos - GetPlanePos(),
         GetActorForwardVector());
 }
-
-// ===== IsInsidePortalBounds =====
 
 bool APortal::IsInsidePortalBounds(const FVector& WorldPos) const
 {
@@ -488,78 +487,132 @@ bool APortal::CanTeleport(AActor* Actor) const
     return true;
 }
 
-// ===== TeleportActor =====
-
 void APortal::TeleportActor(AActor* Actor)
 {
-    if (!Actor || !LinkedPortal) return;
+    if (!IsValid(Actor) || !IsValid(LinkedPortal))
+    {
+        UE_LOG(LogTemp, Error, TEXT("TeleportActor: Actor or LinkedPortal is invalid"));
+        return;
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("TeleportActor: Start Actor=%s"), *Actor->GetName());
 
     const FTransform This = GetActorTransform();
     const FTransform Target = LinkedPortal->GetActorTransform();
 
+    // ワープ元から見た相対位置を取得
     FTransform Local =
         Actor->GetActorTransform().GetRelativeTransform(This);
 
+    // ワープ先の座標に変換
     FTransform NewWorld = Local * Target;
 
     FVector NewLocation = NewWorld.GetLocation();
-    NewLocation += LinkedPortal->GetActorForwardVector() * 50.f;
+    NewLocation += LinkedPortal->GetActorForwardVector() * 100.f;
+
+    FRotator NewRotation = NewWorld.GetRotation().Rotator();
+
+    bool bTeleported = false;
 
     if (ACharacter* Char = Cast<ACharacter>(Actor))
     {
-        Char->TeleportTo(
-            NewLocation,
-            NewWorld.GetRotation().Rotator());
+        bTeleported = Char->TeleportTo(NewLocation, NewRotation, false, false);
+
+        if (bTeleported)
+        {
+            FVector Vel = Char->GetCharacterMovement()->Velocity;
+
+            FVector LocalVel = This.InverseTransformVector(Vel);
+            FVector NewVel = Target.TransformVector(LocalVel);
+
+            Char->GetCharacterMovement()->Velocity = NewVel;
+        }
     }
     else
     {
-        Actor->SetActorLocationAndRotation(
+        bTeleported = Actor->SetActorLocationAndRotation(
             NewLocation,
-            NewWorld.GetRotation().Rotator());
+            NewRotation
+        );
+
+        UE_LOG(
+            LogTemp,
+            Warning,
+            TEXT("TeleportTo Actor: %s"),
+            bTeleported ? TEXT("Success") : TEXT("Failed")
+        );
     }
 
+    // テレポートに失敗した場合は後続処理を行わない
+    if (!bTeleported)
+    {
+        UE_LOG(LogTemp, Error, TEXT("TeleportActor: Teleport failed!"));
+        return;
+    }
+
+    // ワープループ防止
+    RecentlyTeleported.Add(Actor);
+    LinkedPortal->RecentlyTeleported.Add(Actor);
+
+    // ワープ先の位置情報を更新
     LinkedPortal->OverlappingActors.Add(Actor);
     LinkedPortal->LastPos.FindOrAdd(Actor) =
         LinkedPortal->GetActorFrontPos(Actor);
 
-    if (ACharacter* Char = Cast<ACharacter>(Actor))
-    {
-        FVector Vel = Char->GetCharacterMovement()->Velocity;
-        FVector LocalVel = This.InverseTransformVector(Vel);
-        FVector NewVel = Target.TransformVector(LocalVel);
-        Char->GetCharacterMovement()->Velocity = NewVel;
-    }
-
-    RecentlyTeleported.Add(Actor);
-
+    // 一定時間後にロック解除
     FTimerHandle Timer;
+
     GetWorld()->GetTimerManager().SetTimer(
         Timer,
         FTimerDelegate::CreateUObject(
-            this, &APortal::ResetTeleport, Actor),
+            this,
+            &APortal::ResetTeleport,
+            Actor
+        ),
         TeleportCooldown,
-        false);
+        false
+    );
 }
-
-// ===== ResetTeleport =====
 
 void APortal::ResetTeleport(AActor* Actor)
 {
+    if (!IsValid(Actor))
+    {
+        RecentlyTeleported.Remove(Actor);
+
+        if (LinkedPortal)
+        {
+            LinkedPortal->RecentlyTeleported.Remove(Actor);
+        }
+
+        return;
+    }
+
+    // ワープ元のロック解除
     RecentlyTeleported.Remove(Actor);
 
-    if (!Actor) return;
-
-    FVector Front = GetActorFrontPos(Actor);
-    LastPos.FindOrAdd(Actor) = Front;
+    // ワープ元の現在位置を更新
+    LastPos.FindOrAdd(Actor) = GetActorFrontPos(Actor);
 
     if (LinkedPortal)
     {
-        LinkedPortal->LastPos.FindOrAdd(Actor) = Front;
+        // ワープ先のロック解除
+        LinkedPortal->RecentlyTeleported.Remove(Actor);
+
+        // ワープ先の現在位置を更新
+        LinkedPortal->LastPos.FindOrAdd(Actor) =
+            LinkedPortal->GetActorFrontPos(Actor);
+
         LinkedPortal->OverlappingActors.Add(Actor);
     }
 }
 
-// ===== OnOverlap =====
+
+// ポータル移動前に呼ぶ
+void APortal::PrepareForRelocation()
+{
+    RestoreOverlappingCollision();
+}
 
 void APortal::OnOverlap(
     UPrimitiveComponent*,
@@ -569,20 +622,34 @@ void APortal::OnOverlap(
     bool,
     const FHitResult&)
 {
-    if (!OtherActor) return;
+    if (!IsValid(OtherActor)) return;
 
     OverlappingActors.Add(OtherActor);
     LastPos.FindOrAdd(OtherActor) = GetActorFrontPos(OtherActor);
 
     if (ACharacter* Char = Cast<ACharacter>(OtherActor))
     {
-        Char->GetCapsuleComponent()
-            ->SetCollisionResponseToChannel(
-                ECC_WorldStatic, ECR_Ignore);
+        UCapsuleComponent* Capsule = Char->GetCapsuleComponent();
+
+        if (Capsule)
+        {
+            // 元の設定を保存
+            if (!OriginalWorldStaticResponses.Contains(OtherActor))
+            {
+                OriginalWorldStaticResponses.Add(
+                    OtherActor,
+                    Capsule->GetCollisionResponseToChannel(ECC_WorldStatic)
+                );
+            }
+
+            // ポータル内では一時的に無視
+            Capsule->SetCollisionResponseToChannel(
+                ECC_WorldStatic,
+                ECR_Ignore
+            );
+        }
     }
 }
-
-// ===== OnEndOverlap =====
 
 void APortal::OnEndOverlap(
     UPrimitiveComponent*,
@@ -597,8 +664,54 @@ void APortal::OnEndOverlap(
 
     if (ACharacter* Char = Cast<ACharacter>(OtherActor))
     {
-        Char->GetCapsuleComponent()
-            ->SetCollisionResponseToChannel(
-                ECC_WorldStatic, ECR_Block);
+        UCapsuleComponent* Capsule = Char->GetCapsuleComponent();
+
+        if (Capsule)
+        {
+            // 保存していた元の設定に戻す
+            if (ECollisionResponse* Original =
+                OriginalWorldStaticResponses.Find(OtherActor))
+            {
+                Capsule->SetCollisionResponseToChannel(
+                    ECC_WorldStatic,
+                    *Original
+                );
+            }
+        }
     }
+
+    OriginalWorldStaticResponses.Remove(OtherActor);
+}
+
+void APortal::RestoreOverlappingCollision()
+{
+    for (const auto& Pair : OriginalWorldStaticResponses)
+    {
+        ACharacter* Char = Cast<ACharacter>(Pair.Key);
+
+        if (!IsValid(Char)) continue;
+
+        UCapsuleComponent* Capsule = Char->GetCapsuleComponent();
+
+        if (Capsule)
+        {
+            Capsule->SetCollisionResponseToChannel(
+                ECC_WorldStatic,
+                Pair.Value
+            );
+        }
+    }
+
+    OriginalWorldStaticResponses.Empty();
+    OverlappingActors.Empty();
+    LastPos.Empty();
+}
+
+// ポータル破棄時にも復元
+void APortal::EndPlay(
+    const EEndPlayReason::Type EndPlayReason)
+{
+    RestoreOverlappingCollision();
+
+    Super::EndPlay(EndPlayReason);
 }

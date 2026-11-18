@@ -11,11 +11,12 @@ class HOOPRUNNERS_API ALobbyMode : public AGameMode
 public:
     ALobbyMode();
 
-    UPROPERTY(EditDefaultsOnly, Category = "Lobby")
-    int32 MaxPlayers = 2;
-
-    UPROPERTY(EditDefaultsOnly, Category = "Lobby")
-    FString GameMapName = TEXT("/Game/FirstPerson/Lvl_Hoshino");
+    virtual void PreLogin(
+        const FString& Options,
+        const FString& Address,
+        const FUniqueNetIdRepl& UniqueId,
+        FString& ErrorMessage
+    ) override;
 
     virtual void PostLogin(APlayerController* NewPlayer) override;
 
@@ -31,10 +32,18 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Game")
     void NotifyGameClear();
 
+    UPROPERTY(EditDefaultsOnly, Category = "Lobby")
+    int32 MaxPlayers = 2;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Lobby")
+    FString GameMapName = TEXT("/Game/FirstPerson/Lvl_Hoshino");
+
+    // êVãKéQâ¡Çã÷é~Ç∑ÇÈÇ©
+    UPROPERTY()
+    bool bIsStartingGame = false;
+
 private:
     virtual void Logout(AController* Exiting) override;
 
     int32 CurrentPlayerCount = 0;
-
-    bool bIsStartingGame = false;
 };

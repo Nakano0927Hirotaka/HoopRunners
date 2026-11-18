@@ -32,20 +32,13 @@ APortalShooter::APortalShooter()
 }
 
 
-// ============================================================
-// BeginPlay
-// ============================================================
-
 void APortalShooter::BeginPlay()
 {
     Super::BeginPlay();
 }
 
 
-// ============================================================
 // Tick
-// ============================================================
-
 void APortalShooter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
@@ -79,12 +72,6 @@ void APortalShooter::Tick(float DeltaTime)
     UpdatePreview(Start, Forward);
 }
 
-
-// ============================================================
-// Fire
-// 左クリックで呼び出す
-// ============================================================
-
 void APortalShooter::Fire(
     FVector Start,
     FVector Forward)
@@ -103,7 +90,6 @@ void APortalShooter::Fire(
 // ============================================================
 // ServerFire
 // ============================================================
-
 void APortalShooter::ServerFire_Implementation(
     FVector Start,
     FVector Forward)
@@ -188,14 +174,6 @@ bool APortalShooter::CanPlacePortal(
         return false;
     }
 
-    /*UE_LOG(
-        LogTemp, Warning,
-        TEXT("[Portal] Hit Actor: %s / Normal: %s"),
-        *GetNameSafe(Hit.GetActor()),
-        *Hit.ImpactNormal.ToString()
-    );*/
-
-
     // ========================================================
     // NoPortal
     // ========================================================
@@ -223,16 +201,6 @@ bool APortalShooter::CanPlacePortal(
     FVector CheckPos = HitPoint - Normal * CellSize;
 
     FHitResult CheckHit;
-
-    /*UE_LOG(
-        LogTemp,
-        Warning,
-        TEXT("[Portal] Hit=%s / CurrentA=%s / CurrentB=%s / Preview=%s"),
-        *GetNameSafe(Hit.GetActor()),
-        *GetNameSafe(CurrentPortalA),
-        *GetNameSafe(CurrentPortalB),
-        *GetNameSafe(CurrentPreviewActor)
-    );*/
 
     bool bHasWall = World->LineTraceSingleByChannel(
             CheckHit,
@@ -328,6 +296,24 @@ void APortalShooter::FireInternal(
     }
 
     // ========================================================
+    // クールタイム判定
+    // ========================================================
+
+    const float CooldownCheckTime = GetPortalGameTime(World);
+
+    if (CooldownCheckTime < nextPortalTime)
+    {
+        UE_LOG(
+            LogTemp,
+            Warning,
+            TEXT("[Portal] Cooldown: Remaining = %.2f"),
+            nextPortalTime - CooldownCheckTime
+        );
+
+        return;
+    }
+
+    // ========================================================
     // ポータル設置可能判定
     // ========================================================
 
@@ -340,8 +326,7 @@ void APortalShooter::FireInternal(
 
     bool bCanPlace =
         CanPlacePortal(
-            Start,
-            Forward,
+            Start, Forward,
             FrontLocation,
             FrontRotation,
             BackLocation,
@@ -587,10 +572,8 @@ void APortalShooter::StopPortalPreview()
 
 // ============================================================
 // UpdatePreview
-//
 // 右クリック中に毎フレーム呼ばれる
 // ============================================================
-
 void APortalShooter::UpdatePreview(
     FVector Start,
     FVector Forward)
