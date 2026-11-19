@@ -528,7 +528,7 @@ AEnemyAICharacter::~AEnemyAICharacter() {}
 // ********** End Class AEnemyAICharacter **********************************************************
 
 // ********** Begin Registration *******************************************************************
-struct Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h__Script_HoopRunners_Statics
+struct Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h__Script_HoopRunners_Statics
 {
 	static constexpr FEnumRegisterCompiledInInfo EnumInfo[] = {
 		{ EEnemyAIState_StaticEnum, TEXT("EEnemyAIState"), &Z_Registration_Info_UEnum_EEnemyAIState, CONSTRUCT_RELOAD_VERSION_INFO(FEnumReloadVersionInfo, 3194246220U) },
@@ -537,10 +537,10 @@ struct Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRunner_HoopR
 		{ Z_Construct_UClass_AEnemyAICharacter, AEnemyAICharacter::StaticClass, TEXT("AEnemyAICharacter"), &Z_Registration_Info_UClass_AEnemyAICharacter, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(AEnemyAICharacter), 660687742U) },
 	};
 };
-static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h__Script_HoopRunners_1317224339(TEXT("/Script/HoopRunners"),
-	Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h__Script_HoopRunners_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h__Script_HoopRunners_Statics::ClassInfo),
+static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h__Script_HoopRunners_1317224339(TEXT("/Script/HoopRunners"),
+	Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h__Script_HoopRunners_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h__Script_HoopRunners_Statics::ClassInfo),
 	nullptr, 0,
-	Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h__Script_HoopRunners_Statics::EnumInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h__Script_HoopRunners_Statics::EnumInfo));
+	Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h__Script_HoopRunners_Statics::EnumInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_EnemyAICharacter_h__Script_HoopRunners_Statics::EnumInfo));
 // ********** End Registration *********************************************************************
 
 PRAGMA_ENABLE_DEPRECATION_WARNINGS

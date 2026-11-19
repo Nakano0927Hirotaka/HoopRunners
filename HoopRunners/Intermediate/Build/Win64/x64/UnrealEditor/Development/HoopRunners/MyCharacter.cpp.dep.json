@@ -1,12 +1,12 @@
 {
     "Version": "1.2",
     "Data": {
-        "Source": "c:\\users\\ydauser01\\documents\\_git\\hooprunner\\hooprunners\\source\\hooprunners\\private\\mycharacter.cpp",
+        "Source": "c:\\users\\ydauser01\\documents\\_git\\hooprun\\hooprunners\\source\\hooprunners\\private\\mycharacter.cpp",
         "ProvidedModule": "",
-        "PCH": "c:\\users\\ydauser01\\documents\\_git\\hooprunner\\hooprunners\\intermediate\\build\\win64\\x64\\hooprunnerseditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.valexpapi.cpp20.inclorderunreal5_3.h.pch",
+        "PCH": "c:\\users\\ydauser01\\documents\\_git\\hooprun\\hooprunners\\intermediate\\build\\win64\\x64\\hooprunnerseditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.valexpapi.cpp20.inclorderunreal5_3.h.pch",
         "Includes": [
-            "c:\\users\\ydauser01\\documents\\_git\\hooprunner\\hooprunners\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\hooprunners\\definitions.hooprunners.h",
-            "c:\\users\\ydauser01\\documents\\_git\\hooprunner\\hooprunners\\source\\hooprunners\\public\\mycharacter.h",
+            "c:\\users\\ydauser01\\documents\\_git\\hooprun\\hooprunners\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\hooprunners\\definitions.hooprunners.h",
+            "c:\\users\\ydauser01\\documents\\_git\\hooprun\\hooprunners\\source\\hooprunners\\public\\mycharacter.h",
             "c:\\program files\\epic games\\ue_5.6\\engine\\source\\runtime\\engine\\classes\\gameframework\\character.h",
             "c:\\program files\\epic games\\ue_5.6\\engine\\source\\runtime\\engine\\classes\\gameframework\\charactermovementreplication.h",
             "c:\\program files\\epic games\\ue_5.6\\engine\\source\\runtime\\net\\core\\public\\net\\core\\nettoken\\nettokenexportcontext.h",
@@ -31,7 +31,7 @@
             "c:\\program files\\epic games\\ue_5.6\\engine\\source\\runtime\\core\\public\\misc\\comparisonutility.h",
             "c:\\program files\\epic games\\ue_5.6\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\gameplaytags\\uht\\gameplaytagcontainer.generated.h",
             "c:\\program files\\epic games\\ue_5.6\\engine\\plugins\\enhancedinput\\intermediate\\build\\win64\\unrealeditor\\inc\\enhancedinput\\uht\\inputmappingcontext.generated.h",
-            "c:\\users\\ydauser01\\documents\\_git\\hooprunner\\hooprunners\\intermediate\\build\\win64\\unrealeditor\\inc\\hooprunners\\uht\\mycharacter.generated.h",
+            "c:\\users\\ydauser01\\documents\\_git\\hooprun\\hooprunners\\intermediate\\build\\win64\\unrealeditor\\inc\\hooprunners\\uht\\mycharacter.generated.h",
             "c:\\program files\\epic games\\ue_5.6\\engine\\plugins\\enhancedinput\\source\\enhancedinput\\public\\enhancedinputcomponent.h",
             "c:\\program files\\epic games\\ue_5.6\\engine\\plugins\\enhancedinput\\intermediate\\build\\win64\\unrealeditor\\inc\\enhancedinput\\uht\\enhancedinputcomponent.generated.h",
             "c:\\program files\\epic games\\ue_5.6\\engine\\plugins\\enhancedinput\\source\\enhancedinput\\public\\enhancedinputsubsystems.h",

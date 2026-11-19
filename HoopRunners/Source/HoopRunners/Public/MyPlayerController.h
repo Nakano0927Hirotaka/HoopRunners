@@ -1,6 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/Actor.h"
 #include "MyPlayerController.generated.h"
 
 UCLASS()
@@ -42,13 +43,26 @@ public:
     UFUNCTION(Server, Reliable)
     void RequestPlayerCount();
 
+    // ホストからゲーム開始を要求する
+    UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Network")
+    void RequestStartGame();
+
+
+    UFUNCTION(BlueprintImplementableEvent, Category = "Lobby")
+    void OnPlayerCountUpdated(int32 Current, int32 Max);
+
 protected:
     UPROPERTY(EditDefaultsOnly, Category = "UI")
     TSubclassOf<UUserWidget> GameOverWidgetClass;
 
     UPROPERTY(EditDefaultsOnly, Category = "UI")
     TSubclassOf<UUserWidget> GameClearWidgetClass;
+public:
+    // タイトル画面のWidgetクラス
+    UPROPERTY(EditDefaultsOnly, Category = "UI")
+    TSubclassOf<UUserWidget> TitleWidgetClass;
 
-    UFUNCTION(BlueprintImplementableEvent, Category = "Lobby")
-    void OnPlayerCountUpdated(int32 Current, int32 Max);
+    // タイトル画面用の固定カメラActorクラス
+    UPROPERTY(EditDefaultsOnly, Category = "Title")
+    TSubclassOf<AActor> TitleCameraClass;
 };

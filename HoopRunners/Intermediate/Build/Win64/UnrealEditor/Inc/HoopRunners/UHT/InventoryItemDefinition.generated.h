@@ -19,7 +19,7 @@ PRAGMA_DISABLE_DEPRECATION_WARNINGS
 // ********** Begin Class UInventoryItemDefinition *************************************************
 HOOPRUNNERS_API UClass* Z_Construct_UClass_UInventoryItemDefinition_NoRegister();
 
-#define FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h_22_INCLASS_NO_PURE_DECLS \
+#define FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h_22_INCLASS_NO_PURE_DECLS \
 private: \
 	static void StaticRegisterNativesUInventoryItemDefinition(); \
 	friend struct Z_Construct_UClass_UInventoryItemDefinition_Statics; \
@@ -30,7 +30,7 @@ public: \
 	DECLARE_SERIALIZER(UInventoryItemDefinition)
 
 
-#define FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h_22_ENHANCED_CONSTRUCTORS \
+#define FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h_22_ENHANCED_CONSTRUCTORS \
 	/** Standard constructor, called after all reflected properties have been initialized */ \
 	NO_API UInventoryItemDefinition(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get()); \
 	/** Deleted move- and copy-constructors, should never be used */ \
@@ -42,12 +42,12 @@ public: \
 	NO_API virtual ~UInventoryItemDefinition();
 
 
-#define FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h_19_PROLOG
-#define FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h_22_GENERATED_BODY \
+#define FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h_19_PROLOG
+#define FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h_22_GENERATED_BODY \
 PRAGMA_DISABLE_DEPRECATION_WARNINGS \
 public: \
-	FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h_22_INCLASS_NO_PURE_DECLS \
-	FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h_22_ENHANCED_CONSTRUCTORS \
+	FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h_22_INCLASS_NO_PURE_DECLS \
+	FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h_22_ENHANCED_CONSTRUCTORS \
 private: \
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
@@ -57,7 +57,7 @@ class UInventoryItemDefinition;
 // ********** End Class UInventoryItemDefinition ***************************************************
 
 // ********** Begin ScriptStruct FInventoryStack ***************************************************
-#define FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h_45_GENERATED_BODY \
+#define FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h_45_GENERATED_BODY \
 	friend struct Z_Construct_UScriptStruct_FInventoryStack_Statics; \
 	HOOPRUNNERS_API static class UScriptStruct* StaticStruct();
 
@@ -66,7 +66,7 @@ struct FInventoryStack;
 // ********** End ScriptStruct FInventoryStack *****************************************************
 
 #undef CURRENT_FILE_ID
-#define CURRENT_FILE_ID FID_Users_ydauser01_Documents__git_HoopRunner_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h
+#define CURRENT_FILE_ID FID_Users_ydauser01_Documents__git_HoopRun_HoopRunners_Source_HoopRunners_Public_InventoryItemDefinition_h
 
 // ********** Begin Enum EInventoryItemUseType *****************************************************
 #define FOREACH_ENUM_EINVENTORYITEMUSETYPE(op) \
