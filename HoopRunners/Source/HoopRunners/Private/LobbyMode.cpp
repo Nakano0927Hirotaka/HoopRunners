@@ -27,13 +27,6 @@ void ALobbyMode::PreLogin(
     if (bIsStartingGame)
     {
         ErrorMessage = TEXT("Game already started.");
-
-        UE_LOG(
-            LogTemp,
-            Warning,
-            TEXT("PreLogin: Rejected. Game already started.")
-        );
-
         return;
     }
 
