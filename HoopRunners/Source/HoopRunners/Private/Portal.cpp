@@ -12,11 +12,16 @@
 #include "DrawDebugHelpers.h"
 #include "TimerManager.h"
 #include "EngineUtils.h"
+// APortal.cpp：ポータルの映像描画、Overlap管理、プレイヤーテレポートを担当
 
 static constexpr float PortalPlaneOffset = 10.f;
 static constexpr float TeleportCooldown = 0.05f;
 
 // ===== Constructor =====
+
+// ============================================================
+// 1. コンストラクタ・コンポーネント初期化
+// ============================================================
 
 APortal::APortal()
 {
@@ -45,6 +50,10 @@ APortal::APortal()
 
 // ===== ヘルパー =====
 
+// ============================================================
+// 2. Trigger・Render Target生成
+// ============================================================
+
 void APortal::SetupTrigger()
 {
     Trigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -65,6 +74,10 @@ UTextureRenderTarget2D* APortal::CreateRT()
 }
 
 // ===== BeginPlay =====
+
+// ============================================================
+// 3. BeginPlay・初期設定
+// ============================================================
 
 void APortal::BeginPlay()
 {
@@ -113,6 +126,10 @@ void APortal::BeginPlay()
 
 // ===== Tick =====
 
+// ============================================================
+// 4. 毎フレーム更新
+// ============================================================
+
 void APortal::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
@@ -138,6 +155,10 @@ void APortal::Tick(float DeltaTime)
 
 // ===== CleanupInvalidActors =====
 
+// ============================================================
+// 5. 無効Actorの整理
+// ============================================================
+
 void APortal::CleanupInvalidActors()
 {
     TArray<AActor*> RemoveList;
@@ -158,6 +179,10 @@ void APortal::CleanupInvalidActors()
 }
 
 // ===== UpdateCaptureCamera =====
+// ============================================================
+// 6. ポータルカメラ・映像描画
+// ============================================================
+
 void APortal::UpdateCaptureCamera()
 {
     if (!CanUpdateCamera()) return;
@@ -261,6 +286,10 @@ void APortal::DrawPortalDebug()
 }
 
 // ===== InitializePortal（サーバーのみ）=====
+
+// ============================================================
+// 7. ポータル描画の初期化・ネットワーク同期
+// ============================================================
 
 void APortal::InitializePortal()
 {
@@ -379,6 +408,10 @@ void APortal::GetLifetimeReplicatedProps(
 }
 
 
+// ============================================================
+// 8. テレポート判定・実行
+// ============================================================
+
 void APortal::ProcessTeleport()
 {
     if (OverlappingActors.Num() == 0) return;
@@ -487,6 +520,7 @@ bool APortal::CanTeleport(AActor* Actor) const
     return true;
 }
 
+
 void APortal::TeleportActor(AActor* Actor)
 {
     if (!IsValid(Actor) || !IsValid(LinkedPortal))
@@ -530,17 +564,7 @@ void APortal::TeleportActor(AActor* Actor)
     }
     else
     {
-        bTeleported = Actor->SetActorLocationAndRotation(
-            NewLocation,
-            NewRotation
-        );
-
-        UE_LOG(
-            LogTemp,
-            Warning,
-            TEXT("TeleportTo Actor: %s"),
-            bTeleported ? TEXT("Success") : TEXT("Failed")
-        );
+        bTeleported = Actor->SetActorLocationAndRotation(NewLocation, NewRotation);
     }
 
     // テレポートに失敗した場合は後続処理を行わない
@@ -564,14 +588,8 @@ void APortal::TeleportActor(AActor* Actor)
 
     GetWorld()->GetTimerManager().SetTimer(
         Timer,
-        FTimerDelegate::CreateUObject(
-            this,
-            &APortal::ResetTeleport,
-            Actor
-        ),
-        TeleportCooldown,
-        false
-    );
+        FTimerDelegate::CreateUObject(this, &APortal::ResetTeleport, Actor),
+        TeleportCooldown, false);
 }
 
 void APortal::ResetTeleport(AActor* Actor)
@@ -609,6 +627,10 @@ void APortal::ResetTeleport(AActor* Actor)
 
 
 // ポータル移動前に呼ぶ
+// ============================================================
+// 9. ポータル移動前後のOverlap・衝突管理
+// ============================================================
+
 void APortal::PrepareForRelocation()
 {
     RestoreOverlappingCollision();
@@ -708,6 +730,10 @@ void APortal::RestoreOverlappingCollision()
 }
 
 // ポータル破棄時にも復元
+// ============================================================
+// 10. 終了処理
+// ============================================================
+
 void APortal::EndPlay(
     const EEndPlayReason::Type EndPlayReason)
 {

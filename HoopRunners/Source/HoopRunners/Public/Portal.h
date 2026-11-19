@@ -132,6 +132,9 @@ protected:
     UPROPERTY(EditAnywhere)
     UMaterialInterface* PortalBaseMaterial;
 
+    // UTextureRenderTarget2Dを1024x1024で生成する
+    UTextureRenderTarget2D* CreateRT();
+
     //==================================================
     // プレイヤー
     //==================================================
@@ -222,9 +225,8 @@ protected:
     // クールタイム終了後にRecentlyTeleportedから削除する
     void ResetTeleport(AActor* Actor);
 
-    // UTextureRenderTarget2Dを1024x1024で生成する
-    UTextureRenderTarget2D* CreateRT();
 
+    // ---- Trigger・Overlapイベント ----
     // Triggerのコリジョン設定とOverlapイベントを登録する
     void SetupTrigger();
 
