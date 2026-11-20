@@ -132,6 +132,9 @@ protected:
     UPROPERTY(EditAnywhere)
     UMaterialInterface* PortalBaseMaterial;
 
+    // UTextureRenderTarget2Dを1024x1024で生成する
+    UTextureRenderTarget2D* CreateRT();
+
     //==================================================
     // プレイヤー
     //==================================================
@@ -157,6 +160,8 @@ protected:
     UPROPERTY()
     TSet<AActor*> RecentlyTeleported;
 
+    // プレイヤーごとの元のWorldStatic衝突設定
+    TMap<AActor*, ECollisionResponse> OriginalWorldStaticResponses;
     //==================================================
     // OnRep
     //==================================================
@@ -165,6 +170,14 @@ protected:
     // CaptureRTが両方揃っていればDisplayRTを相互適用する
     UFUNCTION()
     void OnRep_LinkedPortal();
+
+    // オーバーラップ中のコリジョンを復元
+    void RestoreOverlappingCollision();
+
+    // ポータル移動前に呼び出す
+    void PrepareForRelocation();
+
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
     //==================================================
     // 内部処理
@@ -212,9 +225,8 @@ protected:
     // クールタイム終了後にRecentlyTeleportedから削除する
     void ResetTeleport(AActor* Actor);
 
-    // UTextureRenderTarget2Dを1024x1024で生成する
-    UTextureRenderTarget2D* CreateRT();
 
+    // ---- Trigger・Overlapイベント ----
     // Triggerのコリジョン設定とOverlapイベントを登録する
     void SetupTrigger();
 
