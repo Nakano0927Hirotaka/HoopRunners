@@ -10,7 +10,12 @@
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/KismetSystemLibrary.h"
+// APortalShooter.cpp：設置位置判定、ポータル生成、プレビュー、クールタイムを担当
 
+
+// ============================================================
+// 1. コンストラクタ・初期状態
+// ============================================================
 
 APortalShooter::APortalShooter()
 {
@@ -33,7 +38,7 @@ APortalShooter::APortalShooter()
 
 
 // ============================================================
-// BeginPlay
+// 2. Actor更新処理
 // ============================================================
 
 void APortalShooter::BeginPlay()
@@ -42,10 +47,7 @@ void APortalShooter::BeginPlay()
 }
 
 
-// ============================================================
 // Tick
-// ============================================================
-
 void APortalShooter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
@@ -79,10 +81,8 @@ void APortalShooter::Tick(float DeltaTime)
     UpdatePreview(Start, Forward);
 }
 
-
 // ============================================================
-// Fire
-// 左クリックで呼び出す
+// 3. 設置入力・サーバーRPC
 // ============================================================
 
 void APortalShooter::Fire(
@@ -103,7 +103,6 @@ void APortalShooter::Fire(
 // ============================================================
 // ServerFire
 // ============================================================
-
 void APortalShooter::ServerFire_Implementation(
     FVector Start,
     FVector Forward)
@@ -117,6 +116,10 @@ void APortalShooter::ServerFire_Implementation(
 //
 // ポータルを置けるか判定する。
 // プレビューと実際の設置の両方から使用する。
+// ============================================================
+
+// ============================================================
+// 4. ポータル設置可能判定
 // ============================================================
 
 bool APortalShooter::CanPlacePortal(
@@ -180,21 +183,13 @@ bool APortalShooter::CanPlacePortal(
 
     FHitResult Hit;
 
-    bool bHit = World->LineTraceSingleByChannel( Hit, Start, End, ECC_Visibility, QueryParams);
+    bool bHit = World->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, QueryParams);
 
     if (!bHit)
     {
         UE_LOG(LogTemp, Warning, TEXT("[Portal] NG: 前方にヒットなし"));
         return false;
     }
-
-    UE_LOG(
-        LogTemp, Warning,
-        TEXT("[Portal] Hit Actor: %s / Normal: %s"),
-        *GetNameSafe(Hit.GetActor()),
-        *Hit.ImpactNormal.ToString()
-    );
-
 
     // ========================================================
     // NoPortal
@@ -224,21 +219,11 @@ bool APortalShooter::CanPlacePortal(
 
     FHitResult CheckHit;
 
-    UE_LOG(
-        LogTemp,
-        Warning,
-        TEXT("[Portal] Hit=%s / CurrentA=%s / CurrentB=%s / Preview=%s"),
-        *GetNameSafe(Hit.GetActor()),
-        *GetNameSafe(CurrentPortalA),
-        *GetNameSafe(CurrentPortalB),
-        *GetNameSafe(CurrentPreviewActor)
-    );
-
     bool bHasWall = World->LineTraceSingleByChannel(
-            CheckHit,
-            CheckPos + Normal * 10.f,
-            CheckPos - Normal * 10.f,
-            ECC_Visibility, QueryParams);
+        CheckHit,
+        CheckPos + Normal * 10.f,
+        CheckPos - Normal * 10.f,
+        ECC_Visibility, QueryParams);
 
 
     if (!bHasWall)
@@ -290,7 +275,7 @@ bool APortalShooter::CanPlacePortal(
     OutFrontLocation = HitPoint + Normal * PortalOffset;
 
     OutFrontRotation =
-        FRotationMatrix::MakeFromXZ( Normal, Up).Rotator();
+        FRotationMatrix::MakeFromXZ(Normal, Up).Rotator();
 
 
     // ========================================================
@@ -317,6 +302,10 @@ bool APortalShooter::CanPlacePortal(
 // ============================================================
 // 実際にポータルを生成する。
 // ============================================================
+// ============================================================
+// 5. ポータル生成・リンク設定
+// ============================================================
+
 void APortalShooter::FireInternal(
     FVector Start, FVector Forward)
 {
@@ -324,6 +313,24 @@ void APortalShooter::FireInternal(
 
     if (!World || !PortalClass)
     {
+        return;
+    }
+
+    // ========================================================
+    // クールタイム判定
+    // ========================================================
+
+    const float CooldownCheckTime = GetPortalGameTime(World);
+
+    if (CooldownCheckTime < nextPortalTime)
+    {
+        UE_LOG(
+            LogTemp,
+            Warning,
+            TEXT("[Portal] Cooldown: Remaining = %.2f"),
+            nextPortalTime - CooldownCheckTime
+        );
+
         return;
     }
 
@@ -340,8 +347,7 @@ void APortalShooter::FireInternal(
 
     bool bCanPlace =
         CanPlacePortal(
-            Start,
-            Forward,
+            Start, Forward,
             FrontLocation,
             FrontRotation,
             BackLocation,
@@ -363,7 +369,7 @@ void APortalShooter::FireInternal(
     APawn* OwnerPawn = Cast<APawn>(GetOwner());
 
     APlayerController* PC = OwnerPawn ? Cast<APlayerController>(
-            OwnerPawn->GetController()) : nullptr;
+        OwnerPawn->GetController()) : nullptr;
 
 
     // ========================================================
@@ -487,17 +493,6 @@ void APortalShooter::FireInternal(
     // ポータル生成成功後にクールタイムを開始
     const float CurrentTime = GetPortalGameTime(World);
     nextPortalTime = CurrentTime + PortalCooldown;
-
-    UE_LOG(
-        LogTemp,
-        Warning,
-        TEXT("[Cooldown] Started: Now=%.2f, Next=%.2f, Duration=%.2f"),
-        CurrentTime,
-        nextPortalTime,
-        PortalCooldown
-    );
-
-    UE_LOG(LogTemp, Warning, TEXT("Portal Created"));
 }
 
 
@@ -505,6 +500,10 @@ void APortalShooter::FireInternal(
 // StartPortalPreview
 // 右クリック押下
 // ============================================================
+// ============================================================
+// 6. プレビュー生成・表示制御
+// ============================================================
+
 void APortalShooter::StartPortalPreview()
 {
     if (!GetWorld())
@@ -598,10 +597,8 @@ void APortalShooter::StopPortalPreview()
 
 // ============================================================
 // UpdatePreview
-//
 // 右クリック中に毎フレーム呼ばれる
 // ============================================================
-
 void APortalShooter::UpdatePreview(
     FVector Start,
     FVector Forward)
@@ -822,6 +819,10 @@ void APortalShooter::UpdatePreviewColor()
 // ============================================================
 // クールタイム
 // ============================================================
+// ============================================================
+// 7. クールタイム・同期時刻
+// ============================================================
+
 float APortalShooter::GetRemainingCooldown() const
 {
     UWorld* World = GetWorld();
@@ -895,6 +896,10 @@ float APortalShooter::GetPortalGameTime(const UWorld* World)
 // ============================================================
 // IsPortalPlaceable
 // ============================================================
+// ============================================================
+// 8. 状態取得・Render Target生成
+// ============================================================
+
 bool APortalShooter::IsPortalPlaceable() const
 {
     return bCanPlacePortal;

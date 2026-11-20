@@ -7,66 +7,34 @@
 class APortal;
 class UTextureRenderTarget2D;
 
+// ポータルの設置判定・生成・プレビュー・クールタイムを担当するActor
 UCLASS()
 class HOOPRUNNERS_API APortalShooter : public AActor
 {
     GENERATED_BODY()
 
 public:
-
     APortalShooter();
-
+    virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
 
-    virtual void BeginPlay() override;
-
-
-    // ========================================
-    // ポータル設置
-    // ========================================
-
+    // ==================================================
+    // 1. ポータル設置・生成
+    // ==================================================
     UFUNCTION(BlueprintCallable, Category = "Portal")
     void Fire(FVector Start, FVector Forward);
 
     UFUNCTION(Server, Reliable)
     void ServerFire(FVector Start, FVector Forward);
-
-    void ServerFire_Implementation(
-        FVector Start, FVector Forward);
-
+    void ServerFire_Implementation(FVector Start, FVector Forward);
     void FireInternal(FVector Start, FVector Forward);
 
-    // 残りクールタイムを取得
-    UFUNCTION(BlueprintPure, Category = "Portal")
-    float GetRemainingCooldown() const;
-
-    // ポータルを設置できるか
-    UFUNCTION(BlueprintPure, Category = "Portal")
-    bool IsPortalReady() const;
-
-    // クールタイムの進行率（0.0～1.0）
-    UFUNCTION(BlueprintPure, Category = "Portal|Cooldown")
-    float GetCooldownProgress() const;
-
-    virtual void GetLifetimeReplicatedProps(
-        TArray<FLifetimeProperty>& OutLifetimeProps
-    ) const override;
-
-    static float GetPortalGameTime(const UWorld* World);
-
-    // ========================================
-    // 設置可能判定
-    // ========================================
-
     UFUNCTION(BlueprintCallable, Category = "Portal")
-    bool CanPlacePortal(FVector Start, FVector Forward, 
-        FVector& OutFrontLocation, FRotator& OutFrontRotation, 
-        FVector& OutBackLocation, FRotator& OutBackRotation);
+    bool CanPlacePortal(FVector Start, FVector Forward, FVector& OutFrontLocation, FRotator& OutFrontRotation, FVector& OutBackLocation, FRotator& OutBackRotation);
 
-    // ========================================
-    // プレビュー
-    // ========================================
-
+    // ==================================================
+    // 2. ポータル設置プレビュー
+    // ==================================================
     UFUNCTION(BlueprintCallable, Category = "Portal Preview")
     void StartPortalPreview();
 
@@ -81,89 +49,90 @@ public:
 
     void UpdatePreviewColor();
 
-    // ========================================
-    // RT
-    // ========================================
+    // ==================================================
+    // 3. クールタイム・ゲーム時刻
+    // ==================================================
+    UFUNCTION(BlueprintPure, Category = "Portal")
+    float GetRemainingCooldown() const;
+
+    UFUNCTION(BlueprintPure, Category = "Portal")
+    bool IsPortalReady() const;
+
+    UFUNCTION(BlueprintPure, Category = "Portal|Cooldown")
+    float GetCooldownProgress() const;
+
+    static float GetPortalGameTime(const UWorld* World);
+
+    // ==================================================
+    // 4. 描画用Render Target・ネットワーク同期
+    // ==================================================
     UTextureRenderTarget2D* CreatePortalRT();
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-public:
-
-    // ========================================
-    // Portal
-    // ========================================
-
+    // ==================================================
+    // 5. エディタ設定：ポータル本体
+    // ==================================================
     UPROPERTY(EditAnywhere, Category = "Portal")
     TSubclassOf<APortal> PortalClass;
 
-    // ポータルのクールタイム
     UPROPERTY(EditAnywhere, Category = "Portal")
     float PortalCooldown = 3.0f;
 
-    // 壁の厚さ
     UPROPERTY(EditAnywhere, Category = "Portal")
     float CellSize = 100.f;
 
-    // ポータルと壁の距離
     UPROPERTY(EditAnywhere, Category = "Portal")
     float PortalOffset = 10.f;
 
-    // 床からポータル中心までの高さ（cm）
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Portal")
     float PortalHeightFromFloor = 200.0f;
 
+    // ==================================================
+    // 6. エディタ設定：描画用RT
+    // ==================================================
     UPROPERTY(EditAnywhere, Category = "Portal")
     UTextureRenderTarget2D* RT_PortalA;
 
     UPROPERTY(EditAnywhere, Category = "Portal")
     UTextureRenderTarget2D* RT_PortalB;
 
-    // Preview Class
-    // 表示するプレビューのクラス
+    // ==================================================
+    // 7. エディタ設定：プレビュー表示
+    // ==================================================
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Portal Preview")
     TSubclassOf<AActor> ValidPreviewClass;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Portal Preview")
     TSubclassOf<AActor> InvalidPreviewClass;
 
-    // 実際に生成されたプレビューアクター
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Portal Preview")
     TObjectPtr<AActor> ValidPreviewActor = nullptr;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Portal Preview")
     TObjectPtr<AActor> InvalidPreviewActor = nullptr;
 
-
 private:
-
-    // ========================================
-    // 現在のポータル
-    // ========================================
+    // ==================================================
+    // 8. 実行中のポータル参照
+    // ==================================================
+    UPROPERTY()
+    APortal* CurrentPortalA = nullptr;
 
     UPROPERTY()
-    APortal* CurrentPortalA;
+    APortal* CurrentPortalB = nullptr;
 
+    // ==================================================
+    // 9. 実行中のプレビュー参照・状態
+    // ==================================================
     UPROPERTY()
-    APortal* CurrentPortalB;
-
-    // ========================================
-    // 次に設置可能になるゲーム内時刻
-    // ========================================
-    UPROPERTY(Replicated)
-    float nextPortalTime = 0.0f;
-
-    // ========================================
-    // プレビューActor
-    // ========================================
-
-    UPROPERTY()
-    AActor* CurrentPreviewActor;
-
-    // ========================================
-    // 状態
-    // ========================================
+    AActor* CurrentPreviewActor = nullptr;
 
     bool bPreviewing = false;
-
     bool bCanPlacePortal = false;
 
+    // ==================================================
+    // 10. ネットワーク共有のクールタイム状態
+    // ==================================================
+    UPROPERTY(Replicated)
+    float nextPortalTime = 0.0f;
 };
