@@ -283,11 +283,11 @@ bool UInventoryComponent::PerformAction(EInventoryNetworkAction Action, AInvento
 		if (!ConsumeItemAt(ItemIndex)) return false;
 		for (TActorIterator<AEnemyCharacter> It(World); It; ++It)
 		{
-			if (IsValid(*It)) It->ApplyEMP(4.0f);
+			if (IsValid(*It)) It->ApplyEMP(5.0f);
 		}
 		for (TActorIterator<AEnemyAICharacter> It(World); It; ++It)
 		{
-			if (IsValid(*It)) It->ApplyEMPStun(4.0f);
+			if (IsValid(*It)) It->ApplyEMPStun(5.0f);
 		}
 		return true;
 	}

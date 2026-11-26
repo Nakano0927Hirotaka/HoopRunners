@@ -11,15 +11,16 @@ void ANoiseActor::BeginPlay()
 {
     Super::BeginPlay();
 
-    SetLifeSpan(Duration);
+    ExpirationTime = GetWorld()->GetTimeSeconds() + FMath::Max(Duration, 0.0f);
+    SetLifeSpan(FMath::Max(Duration, 0.01f));
 
-    DrawDebugSphere(
-        GetWorld(),
-        GetActorLocation(),
-        Radius,
-        32,
-        FColor::Red,
-        false,
-        Duration
-    );
+    if (bDrawDebug)
+    {
+        DrawDebugSphere(GetWorld(), GetActorLocation(), Radius, 32, FColor::Red, false, Duration);
+    }
+}
+
+float ANoiseActor::GetRemainingDuration() const
+{
+    return GetWorld() ? FMath::Max(0.0f, ExpirationTime - GetWorld()->GetTimeSeconds()) : 0.0f;
 }

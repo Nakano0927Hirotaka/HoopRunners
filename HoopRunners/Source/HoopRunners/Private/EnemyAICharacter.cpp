@@ -115,13 +115,6 @@ void AEnemyAICharacter::Tick(float DeltaSeconds)
 		}
 	}
 
-	// 設定時刻を過ぎたら、視界による追跡から終盤の継続追跡へ移る。
-	if (CurrentState != EEnemyAIState::FinalChase
-		&& CurrentTime >= FMath::Max(FinalChaseStartSeconds, 0.0f))
-	{
-		EnterFinalChase(CurrentTime);
-	}
-
 	if (CurrentState == EEnemyAIState::FinalChase)
 	{
 		if (CurrentTime >= NextFinalTargetUpdateTime)
