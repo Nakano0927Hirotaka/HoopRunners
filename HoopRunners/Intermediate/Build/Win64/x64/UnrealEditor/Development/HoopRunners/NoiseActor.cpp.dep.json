@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 {
     "Version": "1.2",
     "Data": {
@@ -13,20 +12,4 @@
         "ImportedModules": [],
         "ImportedHeaderUnits": []
     }
-=======
-{
-    "Version": "1.2",
-    "Data": {
-        "Source": "c:\\users\\ydauser01\\documents\\_git\\hooprun\\hooprunners\\source\\hooprunners\\private\\noiseactor.cpp",
-        "ProvidedModule": "",
-        "PCH": "c:\\users\\ydauser01\\documents\\_git\\hooprun\\hooprunners\\intermediate\\build\\win64\\x64\\hooprunnerseditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.valexpapi.cpp20.inclorderunreal5_3.h.pch",
-        "Includes": [
-            "c:\\users\\ydauser01\\documents\\_git\\hooprun\\hooprunners\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\hooprunners\\definitions.hooprunners.h",
-            "c:\\users\\ydauser01\\documents\\_git\\hooprun\\hooprunners\\source\\hooprunners\\public\\noiseactor.h",
-            "c:\\users\\ydauser01\\documents\\_git\\hooprun\\hooprunners\\intermediate\\build\\win64\\unrealeditor\\inc\\hooprunners\\uht\\noiseactor.generated.h"
-        ],
-        "ImportedModules": [],
-        "ImportedHeaderUnits": []
-    }
->>>>>>> 0f0b5bce77c4859c3f7d857000a8d1cc932162da
 }

@@ -2,10 +2,6 @@
 	"BuildId": "43139311",
 	"Modules": 
 	{
-<<<<<<< HEAD
-		"HoopRunners": "UnrealEditor-HoopRunners-8781.dll"
-=======
-		"HoopRunners": "UnrealEditor-HoopRunners-1316.dll"
->>>>>>> 0f0b5bce77c4859c3f7d857000a8d1cc932162da
+		"HoopRunners": "UnrealEditor-HoopRunners.dll"
 	}
 }
