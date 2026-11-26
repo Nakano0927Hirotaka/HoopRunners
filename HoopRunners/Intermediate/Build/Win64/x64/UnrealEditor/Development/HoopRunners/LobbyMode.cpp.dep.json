@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 {
     "Version": "1.2",
     "Data": {
@@ -21,28 +20,4 @@
         "ImportedModules": [],
         "ImportedHeaderUnits": []
     }
-=======
-{
-    "Version": "1.2",
-    "Data": {
-        "Source": "c:\\users\\ydauser01\\documents\\_git\\hooprun\\hooprunners\\source\\hooprunners\\private\\lobbymode.cpp",
-        "ProvidedModule": "",
-        "PCH": "c:\\users\\ydauser01\\documents\\_git\\hooprun\\hooprunners\\intermediate\\build\\win64\\x64\\hooprunnerseditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.valexpapi.cpp20.inclorderunreal5_3.h.pch",
-        "Includes": [
-            "c:\\users\\ydauser01\\documents\\_git\\hooprun\\hooprunners\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\hooprunners\\definitions.hooprunners.h",
-            "c:\\users\\ydauser01\\documents\\_git\\hooprun\\hooprunners\\source\\hooprunners\\public\\lobbymode.h",
-            "c:\\program files\\epic games\\ue_5.6\\engine\\source\\runtime\\engine\\classes\\gameframework\\gamemode.h",
-            "c:\\program files\\epic games\\ue_5.6\\engine\\source\\runtime\\engine\\classes\\gameframework\\gamemodebase.h",
-            "c:\\program files\\epic games\\ue_5.6\\engine\\source\\runtime\\engine\\classes\\engine\\serverstatreplicator.h",
-            "c:\\program files\\epic games\\ue_5.6\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\serverstatreplicator.generated.h",
-            "c:\\program files\\epic games\\ue_5.6\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\gamemodebase.generated.h",
-            "c:\\program files\\epic games\\ue_5.6\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\gamemode.generated.h",
-            "c:\\users\\ydauser01\\documents\\_git\\hooprun\\hooprunners\\intermediate\\build\\win64\\unrealeditor\\inc\\hooprunners\\uht\\lobbymode.generated.h",
-            "c:\\users\\ydauser01\\documents\\_git\\hooprun\\hooprunners\\source\\hooprunners\\public\\myplayercontroller.h",
-            "c:\\users\\ydauser01\\documents\\_git\\hooprun\\hooprunners\\intermediate\\build\\win64\\unrealeditor\\inc\\hooprunners\\uht\\myplayercontroller.generated.h"
-        ],
-        "ImportedModules": [],
-        "ImportedHeaderUnits": []
-    }
->>>>>>> 0f0b5bce77c4859c3f7d857000a8d1cc932162da
 }

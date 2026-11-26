@@ -93,6 +93,8 @@ void UInventoryWidget::RefreshInventory()
 	const UInventoryComponent* Source = Inventory.Get();
 	const TArray<FInventoryStack>* Items = Source ? &Source->GetItems() : nullptr;
 	constexpr int32 SlotCount = 3;
+	constexpr float SlotExtent = 150.0f;
+	constexpr float SlotSpacing = 8.0f;
 	for (int32 SlotIndex = 0; SlotIndex < SlotCount; ++SlotIndex)
 	{
 		const FInventoryStack* Stack = Items && Items->IsValidIndex(SlotIndex)
@@ -103,11 +105,11 @@ void UInventoryWidget::RefreshInventory()
 		const bool bSelected = Source && SlotIndex == Source->GetSelectedSlotIndex();
 
 		USizeBox* SlotSize = NewObject<USizeBox>(this);
-		SlotSize->SetWidthOverride(100.0f);
-		SlotSize->SetHeightOverride(100.0f);
+		SlotSize->SetWidthOverride(SlotExtent);
+		SlotSize->SetHeightOverride(SlotExtent);
 
 		UBorder* SlotBorder = NewObject<UBorder>(this);
-		SlotBorder->SetPadding(FMargin(5.0f));
+		SlotBorder->SetPadding(FMargin(8.0f));
 		SlotBorder->SetBrushColor(bSelected
 			? (bOccupied
 				? FLinearColor(0.04f, 0.25f, 0.38f, 1.0f)
@@ -140,7 +142,7 @@ void UInventoryWidget::RefreshInventory()
 		}
 		Quantity->SetColorAndOpacity(FSlateColor(FLinearColor::White));
 		FSlateFontInfo QuantityFont = Quantity->GetFont();
-		QuantityFont.Size = 14;
+		QuantityFont.Size = 20;
 		Quantity->SetFont(QuantityFont);
 		if (UOverlaySlot* QuantitySlot = SlotContents->AddChildToOverlay(Quantity))
 		{
@@ -150,7 +152,7 @@ void UInventoryWidget::RefreshInventory()
 
 		if (UHorizontalBoxSlot* BoxSlot = InventorySlots->AddChildToHorizontalBox(SlotSize))
 		{
-			BoxSlot->SetPadding(FMargin(SlotIndex == 0 ? 0.0f : 6.0f, 0.0f, 0.0f, 0.0f));
+			BoxSlot->SetPadding(FMargin(SlotIndex == 0 ? 0.0f : SlotSpacing, 0.0f, 0.0f, 0.0f));
 		}
 	}
 }
